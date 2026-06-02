@@ -27,7 +27,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Orbit",
-  description: "Your personal subscription hub",
+  description: "Your subscriptions, in orbit.",
+  manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
