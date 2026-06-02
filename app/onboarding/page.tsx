@@ -9,19 +9,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { vaultStore } from '@/lib/store/vault-store';
+import { settingsStore } from '@/lib/store/settings-store';
+import { useT } from '@/lib/i18n/use-t';
 import { cn } from '@/lib/utils';
 
 // ── Password strength ──────────────────────────────────────────────────────────
 
 interface StrengthResult {
   score: 0 | 1 | 2 | 3 | 4;
-  label: string;
+  labelKey: 'onboarding.strengthWeak' | 'onboarding.strengthFair' | 'onboarding.strengthGood' | 'onboarding.strengthStrong' | '';
   color: string;
   width: string;
 }
 
 function getStrength(pw: string): StrengthResult {
-  if (pw.length === 0) return { score: 0, label: '', color: 'bg-border', width: 'w-0' };
+  if (pw.length === 0) return { score: 0, labelKey: '', color: 'bg-border', width: 'w-0' };
   let score = 0;
   if (pw.length >= 8) score++;
   if (pw.length >= 12) score++;
@@ -29,11 +31,11 @@ function getStrength(pw: string): StrengthResult {
   if (/[^A-Za-z0-9]/.test(pw)) score++;
 
   const levels: StrengthResult[] = [
-    { score: 0, label: '', color: 'bg-border', width: 'w-0' },
-    { score: 1, label: 'Weak', color: 'bg-destructive', width: 'w-1/4' },
-    { score: 2, label: 'Fair', color: 'bg-amber-400', width: 'w-2/4' },
-    { score: 3, label: 'Good', color: 'bg-emerald-400', width: 'w-3/4' },
-    { score: 4, label: 'Strong', color: 'bg-emerald-500', width: 'w-full' },
+    { score: 0, labelKey: '', color: 'bg-border', width: 'w-0' },
+    { score: 1, labelKey: 'onboarding.strengthWeak', color: 'bg-destructive', width: 'w-1/4' },
+    { score: 2, labelKey: 'onboarding.strengthFair', color: 'bg-amber-400', width: 'w-2/4' },
+    { score: 3, labelKey: 'onboarding.strengthGood', color: 'bg-emerald-400', width: 'w-3/4' },
+    { score: 4, labelKey: 'onboarding.strengthStrong', color: 'bg-emerald-500', width: 'w-full' },
   ];
   return levels[score] as StrengthResult;
 }
@@ -42,6 +44,7 @@ function getStrength(pw: string): StrengthResult {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useT();
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
@@ -68,6 +71,8 @@ export default function OnboardingPage() {
     setError('');
     try {
       await vaultStore.getState().createVault(password);
+      // Load settings after vault creation
+      await settingsStore.getState().loadSettings();
       router.replace('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create vault. Please try again.');
@@ -88,10 +93,10 @@ export default function OnboardingPage() {
           <OrbitLogo size={56} className="drop-shadow-md" />
           <div className="space-y-1">
             <h1 className="font-heading text-3xl text-foreground tracking-tight">
-              Welcome to Orbit
+              {t('onboarding.title')}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Create a master password to encrypt your vault.
+              {t('onboarding.subtitle')}
             </p>
           </div>
         </div>
@@ -107,8 +112,8 @@ export default function OnboardingPage() {
             aria-hidden
           />
           <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-200">
-            <strong className="font-semibold">There is no way to recover your master password.</strong>{' '}
-            If you forget it, your data is permanently lost. Everything is encrypted on this device only — Orbit never sends your data anywhere.
+            <strong className="font-semibold">{t('onboarding.warning')}</strong>{' '}
+            {t('onboarding.warningBody')}
           </p>
         </div>
 
@@ -116,7 +121,7 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* Master password */}
           <div className="space-y-1.5">
-            <Label htmlFor={pwId}>Master password</Label>
+            <Label htmlFor={pwId}>{t('onboarding.passwordLabel')}</Label>
             <div className="relative">
               <Input
                 id={pwId}
@@ -130,14 +135,14 @@ export default function OnboardingPage() {
                 )}
                 aria-describedby={`${pwId}-hint`}
                 aria-invalid={tooShort || undefined}
-                placeholder="Choose a strong password"
+                placeholder={t('onboarding.passwordPlaceholder')}
                 required
               />
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 onClick={() => setShowPw((v) => !v)}
-                aria-label={showPw ? 'Hide password' : 'Show password'}
+                aria-label={showPw ? t('unlock.hidePassword') : t('unlock.showPassword')}
                 tabIndex={0}
               >
                 {showPw ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
@@ -158,15 +163,15 @@ export default function OnboardingPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <p id={`${pwId}-hint`} className="text-xs text-muted-foreground">
-                    {tooShort ? 'Must be at least 8 characters' : 'Min 8 chars · uppercase · numbers · symbols'}
+                    {tooShort ? t('onboarding.passwordTooShort') : t('onboarding.passwordHint')}
                   </p>
-                  {strength.label && (
+                  {strength.labelKey && (
                     <span className={cn('text-xs font-medium', {
                       'text-destructive':  strength.score === 1,
                       'text-amber-600 dark:text-amber-400': strength.score === 2,
                       'text-emerald-600 dark:text-emerald-400': strength.score >= 3,
                     })}>
-                      {strength.label}
+                      {t(strength.labelKey)}
                     </span>
                   )}
                 </div>
@@ -176,7 +181,7 @@ export default function OnboardingPage() {
 
           {/* Confirm password */}
           <div className="space-y-1.5">
-            <Label htmlFor={cfId}>Confirm password</Label>
+            <Label htmlFor={cfId}>{t('onboarding.confirmLabel')}</Label>
             <div className="relative">
               <Input
                 id={cfId}
@@ -187,14 +192,14 @@ export default function OnboardingPage() {
                 className={cn('h-11 pr-10 text-base', mismatch && 'aria-invalid:border-destructive')}
                 aria-describedby={mismatch ? `${cfId}-err` : undefined}
                 aria-invalid={mismatch || undefined}
-                placeholder="Re-enter your password"
+                placeholder={t('onboarding.confirmPlaceholder')}
                 required
               />
               <button
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 onClick={() => setShowCf((v) => !v)}
-                aria-label={showCf ? 'Hide confirm password' : 'Show confirm password'}
+                aria-label={showCf ? t('unlock.hidePassword') : t('unlock.showPassword')}
                 tabIndex={0}
               >
                 {showCf ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
@@ -202,12 +207,12 @@ export default function OnboardingPage() {
             </div>
             {mismatch && (
               <p id={`${cfId}-err`} role="alert" className="text-xs text-destructive">
-                Passwords do not match
+                {t('onboarding.passwordsMismatch')}
               </p>
             )}
             {!mismatch && confirm.length > 0 && password === confirm && (
               <p className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 size={12} aria-hidden /> Passwords match
+                <CheckCircle2 size={12} aria-hidden /> {t('onboarding.passwordsMatch')}
               </p>
             )}
           </div>
@@ -227,7 +232,7 @@ export default function OnboardingPage() {
             aria-describedby={error ? errId : undefined}
           >
             <Lock size={16} aria-hidden />
-            {loading ? 'Creating vault…' : 'Create vault'}
+            {loading ? t('onboarding.submitting') : t('onboarding.submit')}
           </Button>
         </form>
       </div>

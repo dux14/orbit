@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "./nav-items";
+import { useT } from "@/lib/i18n/use-t";
+import type { DictKey } from "@/lib/i18n/dict";
 
 /**
  * BottomTabNav — fixed bottom navigation for mobile (< md).
@@ -12,13 +14,14 @@ import { NAV_ITEMS } from "./nav-items";
  */
 export function BottomTabNav() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <nav
       aria-label="Main navigation"
       className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80"
     >
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+      {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
         const isActive = pathname === href || pathname.startsWith(href + "/");
 
         return (
@@ -54,7 +57,7 @@ export function BottomTabNav() {
                 className={cn("size-[1.125rem]", isActive && "stroke-[2.25]")}
               />
             </span>
-            <span>{label}</span>
+            <span>{t(labelKey as DictKey)}</span>
           </Link>
         );
       })}

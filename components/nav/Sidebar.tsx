@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { OrbitLogo } from "@/components/orbit/OrbitLogo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { NAV_ITEMS } from "./nav-items";
+import { useT } from "@/lib/i18n/use-t";
+import type { DictKey } from "@/lib/i18n/dict";
 
 /**
  * Sidebar — fixed left navigation for desktop (>= md).
@@ -14,6 +16,7 @@ import { NAV_ITEMS } from "./nav-items";
  */
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useT();
 
   return (
     <aside
@@ -31,7 +34,7 @@ export function Sidebar() {
       {/* Nav links */}
       <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-2 py-3">
         <ul role="list" className="flex flex-col gap-0.5">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
             const isActive =
               pathname === href || pathname.startsWith(href + "/");
 
@@ -65,7 +68,7 @@ export function Sidebar() {
                         : "text-sidebar-foreground/50"
                     )}
                   />
-                  {label}
+                  {t(labelKey as DictKey)}
                 </Link>
               </li>
             );

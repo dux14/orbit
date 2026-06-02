@@ -1,24 +1,29 @@
 import { LayoutDashboard, ListChecks, CreditCard, Settings } from "lucide-react";
+import type { DictKey } from "@/lib/i18n/dict";
 
-export const NAV_ITEMS = [
+export const NAV_ITEMS: {
+  href: string;
+  labelKey: DictKey;
+  icon: React.ElementType;
+}[] = [
   {
     href: "/dashboard",
-    label: "Dashboard",
+    labelKey: "nav.dashboard",
     icon: LayoutDashboard,
   },
   {
     href: "/subscriptions",
-    label: "Subscriptions",
+    labelKey: "nav.subscriptions",
     icon: ListChecks,
   },
   {
     href: "/payment-methods",
-    label: "Cards",
+    labelKey: "nav.cards",
     icon: CreditCard,
   },
   {
     href: "/settings",
-    label: "Settings",
+    labelKey: "nav.settings",
     icon: Settings,
   },
 ] as const;
