@@ -11,6 +11,8 @@ import { OrbitLogo } from "@/components/orbit/OrbitLogo";
 import { OrbitViz } from "@/components/orbit/OrbitViz";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircleIcon, PlusIcon, TrendingUpIcon, CalendarIcon } from "lucide-react";
+import { notifyDueRenewals } from "@/lib/services/reminders";
+import { ReminderPermission } from "@/components/reminders/ReminderPermission";
 
 // ─── Currency formatting ────────────────────────────────────────────────────────
 function fmtCurrency(amount: number, currency: string, locale: string): string {
@@ -343,6 +345,12 @@ export default function DashboardPage() {
     settingsStore.getState().loadSettings();
   }, []);
 
+  // Fire browser notifications for due renewals (deduped per day)
+  React.useEffect(() => {
+    if (subscriptions.length === 0) return;
+    notifyDueRenewals(subscriptions, settings.reminderLeadDays);
+  }, [subscriptions, settings.reminderLeadDays]);
+
   const { primaryCurrency, locale } = settings;
 
   // Resolve payment method IDs → labels
@@ -477,6 +485,11 @@ export default function DashboardPage() {
             currency={primaryCurrency}
             locale={locale}
           />
+
+          {/* ── Reminder permission affordance ────────────────────── */}
+          <div className="flex justify-end px-1">
+            <ReminderPermission />
+          </div>
         </div>
       )}
     </div>
