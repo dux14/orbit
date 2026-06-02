@@ -12,6 +12,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 
 /** Ephemeral credential fields attached by SubscriptionForm */
@@ -123,6 +124,14 @@ export default function SubscriptionsPage() {
       {/* ── Detail sheet ─────────────────────────────────── */}
       <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
+          <SheetHeader className="pb-2">
+            <SheetTitle>
+              {freshViewSub?.serviceName ?? "Subscription details"}
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              View and manage this subscription
+            </SheetDescription>
+          </SheetHeader>
           {freshViewSub && (
             <SubscriptionDetail
               subscription={freshViewSub}

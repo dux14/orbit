@@ -142,7 +142,7 @@ function BarRow({
         aria-label={`${label}: ${fmtCurrency(amount, currency, locale)}`}
       >
         <div
-          className="h-full rounded-full transition-all duration-700"
+          className="h-full rounded-full motion-safe:transition-all motion-safe:duration-700"
           style={{
             width: `${pct}%`,
             background: color,

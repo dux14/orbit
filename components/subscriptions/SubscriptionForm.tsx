@@ -43,10 +43,10 @@ function FieldGroup({ children, className }: { children: React.ReactNode; classN
   return <div className={cn("flex flex-col gap-1.5", className)}>{children}</div>;
 }
 
-function ErrorMsg({ msg }: { msg?: string }) {
+function ErrorMsg({ id, msg }: { id?: string; msg?: string }) {
   if (!msg) return null;
   return (
-    <p role="alert" className="text-xs text-destructive" aria-live="polite">
+    <p id={id} role="alert" className="text-xs text-destructive" aria-live="polite">
       {msg}
     </p>
   );
@@ -147,6 +147,7 @@ export function SubscriptionForm({
           onChange={(e) => setServiceName(e.target.value)}
           aria-required="true"
           aria-describedby={errors.serviceName ? "sub-serviceName-err" : undefined}
+          aria-invalid={errors.serviceName ? true : undefined}
           className={cn(errors.serviceName && "border-destructive")}
         />
         {errors.serviceName && (
@@ -171,9 +172,11 @@ export function SubscriptionForm({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             aria-required="true"
+            aria-describedby={errors.amount ? "sub-amount-err" : undefined}
+            aria-invalid={errors.amount ? true : undefined}
             className={cn(errors.amount && "border-destructive")}
           />
-          <ErrorMsg msg={errors.amount} />
+          <ErrorMsg id="sub-amount-err" msg={errors.amount} />
         </FieldGroup>
 
         <FieldGroup>
@@ -231,9 +234,11 @@ export function SubscriptionForm({
           value={nextRenewalDate}
           onChange={(e) => setNextRenewalDate(e.target.value)}
           aria-required="true"
+          aria-describedby={errors.nextRenewalDate ? "sub-nextRenewal-err" : undefined}
+          aria-invalid={errors.nextRenewalDate ? true : undefined}
           className={cn(errors.nextRenewalDate && "border-destructive")}
         />
-        <ErrorMsg msg={errors.nextRenewalDate} />
+        <ErrorMsg id="sub-nextRenewal-err" msg={errors.nextRenewalDate} />
       </FieldGroup>
 
       <div className="grid grid-cols-2 gap-3">

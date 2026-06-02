@@ -25,7 +25,7 @@ export function Sidebar() {
     >
       {/* Logo / brand */}
       <div className="flex items-center gap-2.5 px-4 h-14 border-b border-sidebar-border">
-        <OrbitLogo size={28} />
+        <OrbitLogo size={28} aria-hidden="true" />
         <span className="font-heading text-lg leading-none tracking-tight text-sidebar-foreground select-none">
           Orbit
         </span>

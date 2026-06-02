@@ -50,7 +50,7 @@ export default function RootPage() {
     <div className="min-h-dvh flex items-center justify-center bg-background">
       <OrbitLogo
         size={48}
-        className="animate-pulse opacity-70"
+        className="motion-safe:animate-pulse opacity-70"
         aria-label="Loading Orbit…"
       />
     </div>

@@ -20,6 +20,14 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-dvh flex">
+      {/* Skip to main content — keyboard / screen-reader convenience */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
       {/* Desktop sidebar — hidden on mobile */}
       <Sidebar />
 
@@ -27,12 +35,13 @@ export function AppShell({ children }: AppShellProps) {
       <main
         id="main-content"
         tabIndex={-1}
+        aria-label="Main content"
         className="flex-1 md:ml-56 flex flex-col min-h-dvh pb-[3.75rem] md:pb-0 outline-none"
       >
         {/* Mobile header — visible only on < md */}
         <header className="flex md:hidden items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 sticky top-0 z-20">
           <div className="flex items-center gap-2">
-            <OrbitLogo size={26} />
+            <OrbitLogo size={26} aria-hidden="true" />
             <span className="font-heading text-lg leading-none tracking-tight">
               Orbit
             </span>

@@ -104,6 +104,15 @@ const ANIMATION_CSS = `
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+.orbit-ring-0 {
+  animation: orbit-spin-slow 60s linear infinite;
+}
+.orbit-ring-1 {
+  animation: orbit-spin-med 45s linear infinite reverse;
+}
+.orbit-ring-2 {
+  animation: orbit-spin-fast 80s linear infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .orbit-ring-0,
   .orbit-ring-1,
@@ -220,11 +229,7 @@ export function OrbitViz({
             <g
               key={`ring-group-${ringIdx}`}
               className={anim.className}
-              style={{
-                transformOrigin: "140px 140px",
-                animation: `orbit-spin-${ringIdx === 0 ? "slow" : ringIdx === 1 ? "med" : "fast"} ${anim.duration} linear infinite`,
-                animationDirection: anim.direction,
-              }}
+              style={{ transformOrigin: "140px 140px" }}
             >
               {byRing[ringIdx].map(({ sub, cx, cy }) => {
                 const r = planetRadius(sub, primaryCurrency, fx, allCosts);
@@ -255,8 +260,7 @@ export function OrbitViz({
                       r={r}
                       fill={color}
                       fillOpacity={0.9}
-                      tabIndex={0}
-                      style={{ cursor: "default" }}
+                      aria-hidden="true"
                     />
                     {/* Highlight specular */}
                     <circle

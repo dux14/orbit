@@ -40,7 +40,7 @@ export function ReminderPermission() {
     <button
       type="button"
       onClick={handleEnable}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       aria-label="Enable renewal reminders"
     >
       <BellIcon className="size-3.5 flex-shrink-0" aria-hidden="true" />

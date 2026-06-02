@@ -15,6 +15,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -117,15 +118,15 @@ interface DeleteDialogProps {
 function DeleteDialog({ pm, onConfirm, onCancel }: DeleteDialogProps) {
   return (
     <Dialog open={pm !== null} onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <DialogContent>
+      <DialogContent aria-describedby="delete-card-desc">
         <DialogHeader>
           <DialogTitle>Delete card?</DialogTitle>
+          <DialogDescription id="delete-card-desc">
+            Remove <span className="font-medium">{pm?.label}</span>{" "}
+            ({pm?.brand} ···· {pm?.last4})? Any subscriptions linked to this card will
+            lose the reference.
+          </DialogDescription>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          Remove <span className="font-medium text-foreground">{pm?.label}</span>{" "}
-          ({pm?.brand} ···· {pm?.last4})? Any subscriptions linked to this card will
-          lose the reference.
-        </p>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} className="cursor-pointer">
             Cancel
