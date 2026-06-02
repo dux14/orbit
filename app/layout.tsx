@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
@@ -57,11 +58,13 @@ const noFlashScript = `
 })();
 `.trim();
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="en"
@@ -70,7 +73,7 @@ export default function RootLayout({
     >
       <head>
         {/* No-flash theme script — must run before paint */}
-        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>{children}</ThemeProvider>
