@@ -1,9 +1,14 @@
-import { AppShell } from "@/components/nav/AppShell";
+import { AppShell } from '@/components/nav/AppShell';
+import { VaultGuard } from './vault-guard';
 
 export default function VaultLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <VaultGuard>
+      <AppShell>{children}</AppShell>
+    </VaultGuard>
+  );
 }
