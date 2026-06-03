@@ -16,11 +16,14 @@ export default defineConfig({
     acceptDownloads: true,
   },
 
+  // Run e2e against a production build, not `pnpm dev`: the Next.js dev overlay
+  // (<nextjs-portal>) intercepts pointer events, and only the prod build exercises
+  // the real nonce-based CSP (incl. wasm-unsafe-eval for argon2id).
   webServer: {
-    command: 'pnpm dev',
+    command: 'pnpm build && pnpm start',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 240_000,
   },
 
   projects: [

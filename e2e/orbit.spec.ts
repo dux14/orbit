@@ -40,6 +40,22 @@ async function createVault(page: import('@playwright/test').Page, password = MAS
   await page.waitForURL('**/dashboard', { timeout: 20_000 });
 }
 
+/**
+ * Navigate to /subscriptions via client-side nav link (avoids hard reload that
+ * would wipe in-memory vault key and trigger VaultGuard redirect).
+ * Uses force:true to bypass the Next.js dev overlay that intercepts pointer events.
+ */
+async function gotoSubscriptions(page: import('@playwright/test').Page) {
+  // Both the desktop sidebar and the mobile bottom-tab nav are always in the DOM
+  // (toggled by CSS `hidden md:flex` / `flex md:hidden`), so the same nav link exists
+  // twice. `filter({ visible: true })` picks the one rendered for the current viewport;
+  // the `^subscriptions$` name excludes the dashboard "Add a subscription" quick link.
+  // A normal (non-forced) click waits for actionability — covering the brief `inert`
+  // window while a just-closed dialog finishes animating out.
+  await page.getByRole('link', { name: /^subscriptions$/i }).filter({ visible: true }).click();
+  await page.waitForURL('**/subscriptions', { timeout: 10_000 });
+}
+
 /** Navigate to /subscriptions and add one subscription. */
 async function addSubscription(
   page: import('@playwright/test').Page,
@@ -47,8 +63,7 @@ async function addSubscription(
   amount = SERVICE_AMOUNT,
   renewalDate = RENEWAL_DATE,
 ) {
-  await page.goto('/subscriptions');
-  await page.waitForURL('**/subscriptions', { timeout: 10_000 });
+  await gotoSubscriptions(page);
 
   // On mobile the FAB has aria-label "Add subscription"; on desktop the header "Add" button is hidden (md:inline-flex)
   // Use the FAB which is always present (even if hidden on desktop via CSS, we can click it)
@@ -77,9 +92,11 @@ async function unlockVault(page: import('@playwright/test').Page, password = MAS
   await page.waitForURL('**/dashboard', { timeout: 20_000 });
 }
 
-/** Navigate to Settings via direct URL (works regardless of viewport). */
+/** Navigate to Settings via client-side nav link (avoids hard reload / vault lock). */
 async function goToSettings(page: import('@playwright/test').Page) {
-  await page.goto('/settings');
+  // See gotoSubscriptions: pick the viewport-visible nav link, normal click (waits for
+  // the dialog-close `inert` window to clear).
+  await page.getByRole('link', { name: /^settings$/i }).filter({ visible: true }).click();
   await page.waitForURL('**/settings', { timeout: 10_000 });
 }
 
@@ -95,9 +112,8 @@ test('create vault, add subscription, reload locks, unlock shows data', async ({
   // Should redirect to /unlock
   await unlockVault(page);
 
-  // Navigate to subscriptions and verify data is there
-  await page.goto('/subscriptions');
-  await page.waitForURL('**/subscriptions', { timeout: 10_000 });
+  // Navigate to subscriptions via client-side nav and verify data is there
+  await gotoSubscriptions(page);
 
   await expect(
     page.getByRole('button', { name: new RegExp(SERVICE_NAME, 'i') }),
@@ -156,16 +172,17 @@ test('export backup, wipe vault, import restores subscription', async ({ page })
   ]);
   await fileChooser.setFiles(backupPath);
 
-  // Password dialog appears — enter the ORIGINAL password (the backup's password)
-  await page.getByLabel('Master password').fill(MASTER_PASSWORD);
+  // Password dialog appears — enter the ORIGINAL password (the backup's password).
+  // Use the textbox role: the dialog title "Enter master password" also matches
+  // getByLabel('Master password'), so the role filter disambiguates to the input.
+  await page.getByRole('textbox', { name: 'Master password' }).fill(MASTER_PASSWORD);
   await page.getByRole('button', { name: /restore backup/i }).click();
 
   // After import the vault is locked and we're sent to /unlock
   await unlockVault(page, MASTER_PASSWORD);
 
-  // Navigate to subscriptions and verify data was restored
-  await page.goto('/subscriptions');
-  await page.waitForURL('**/subscriptions', { timeout: 10_000 });
+  // Navigate to subscriptions via client-side nav and verify data was restored
+  await gotoSubscriptions(page);
 
   await expect(
     page.getByRole('button', { name: new RegExp(SERVICE_NAME, 'i') }),
