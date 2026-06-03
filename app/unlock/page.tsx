@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useId } from 'react';
+import { useState, useId, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { OrbitLogo } from '@/components/orbit/OrbitLogo';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { vaultStore } from '@/lib/store/vault-store';
+import { vaultService } from '@/lib/services/vault-service';
 import { settingsStore } from '@/lib/store/settings-store';
 import { useT } from '@/lib/i18n/use-t';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,17 @@ import { cn } from '@/lib/utils';
 export default function UnlockPage() {
   const router = useRouter();
   const t = useT();
+
+  // Guard: there's nothing to unlock if no vault exists. This also covers the
+  // post-wipe race — wiping locks the store, so the VaultGuard may redirect here
+  // before the settings page's own `/onboarding` redirect lands. Bounce to onboarding.
+  useEffect(() => {
+    let cancelled = false;
+    vaultService.exists().then((exists) => {
+      if (!cancelled && !exists) router.replace('/onboarding');
+    });
+    return () => { cancelled = true; };
+  }, [router]);
 
   const [password, setPassword] = useState('');
   const [showPw, setShowPw]     = useState(false);
@@ -51,7 +63,7 @@ export default function UnlockPage() {
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-sm space-y-8">
+      <main className="w-full max-w-sm space-y-8">
         {/* ── Logo + heading ─────────────────────────────────────────── */}
         <div className="flex flex-col items-center gap-4 text-center">
           <OrbitLogo size={56} className="drop-shadow-md" />
@@ -90,7 +102,7 @@ export default function UnlockPage() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                className="absolute right-1 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 onClick={() => setShowPw((v) => !v)}
                 aria-label={showPw ? t('unlock.hidePassword') : t('unlock.showPassword')}
                 tabIndex={0}
@@ -121,7 +133,7 @@ export default function UnlockPage() {
             {loading ? t('unlock.submitting') : t('unlock.submit')}
           </Button>
         </form>
-      </div>
+      </main>
     </div>
   );
 }

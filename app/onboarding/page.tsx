@@ -87,7 +87,7 @@ export default function OnboardingPage() {
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-sm space-y-8">
+      <main className="w-full max-w-sm space-y-8">
         {/* ── Logo + heading ─────────────────────────────────────────── */}
         <div className="flex flex-col items-center gap-4 text-center">
           <OrbitLogo size={56} className="drop-shadow-md" />
@@ -140,7 +140,7 @@ export default function OnboardingPage() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                className="absolute right-1 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 onClick={() => setShowPw((v) => !v)}
                 aria-label={showPw ? t('unlock.hidePassword') : t('unlock.showPassword')}
                 tabIndex={0}
@@ -197,7 +197,7 @@ export default function OnboardingPage() {
               />
               <button
                 type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                className="absolute right-1 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                 onClick={() => setShowCf((v) => !v)}
                 aria-label={showCf ? t('unlock.hidePassword') : t('unlock.showPassword')}
                 tabIndex={0}
@@ -235,7 +235,7 @@ export default function OnboardingPage() {
             {loading ? t('onboarding.submitting') : t('onboarding.submit')}
           </Button>
         </form>
-      </div>
+      </main>
     </div>
   );
 }
