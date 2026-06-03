@@ -14,11 +14,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { useT } from "@/lib/i18n/use-t";
 
 /** Ephemeral credential fields attached by SubscriptionForm */
 type SubWithCreds = Subscription & { _credEmail?: string; _credPassword?: string };
 
 export default function SubscriptionsPage() {
+  const t = useT();
   // Store selectors
   const subscriptions = useStore(vaultStore, (s) => s.data?.subscriptions ?? []);
   const paymentMethods = useStore(vaultStore, (s) => s.data?.paymentMethods ?? []);
@@ -105,7 +107,7 @@ export default function SubscriptionsPage() {
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader className="pb-2">
             <SheetTitle>
-              {editSub ? "Edit subscription" : "Add subscription"}
+              {editSub ? t('subs.sheetEdit') : t('subs.sheetAdd')}
             </SheetTitle>
           </SheetHeader>
           <SubscriptionForm
@@ -126,10 +128,10 @@ export default function SubscriptionsPage() {
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader className="pb-2">
             <SheetTitle>
-              {freshViewSub?.serviceName ?? "Subscription details"}
+              {freshViewSub?.serviceName ?? t('subs.sheetDetailFallback')}
             </SheetTitle>
             <SheetDescription className="sr-only">
-              View and manage this subscription
+              {t('subs.sheetDetailDesc')}
             </SheetDescription>
           </SheetHeader>
           {freshViewSub && (

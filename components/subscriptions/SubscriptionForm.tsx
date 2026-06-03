@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/use-t";
+import type { DictKey } from "@/lib/i18n/dict";
 
 /** ─── Types ─────────────────────────────────────────────────────────── */
 interface SubscriptionFormProps {
@@ -22,17 +24,20 @@ interface FormErrors {
 }
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "MXN", "BRL", "COP"];
-const BILLING_CYCLES: { value: BillingCycle; label: string }[] = [
-  { value: "monthly", label: "Monthly" },
-  { value: "annual", label: "Annual" },
-  { value: "custom", label: "Custom" },
-];
-const STATUSES: { value: SubscriptionStatus; label: string }[] = [
-  { value: "active", label: "Active" },
-  { value: "trial", label: "Trial" },
-  { value: "paused", label: "Paused" },
-  { value: "canceled", label: "Canceled" },
-];
+const BILLING_CYCLE_VALUES: BillingCycle[] = ["monthly", "annual", "custom"];
+const STATUS_VALUES: SubscriptionStatus[] = ["active", "trial", "paused", "canceled"];
+
+const BILLING_CYCLE_KEYS: Record<BillingCycle, DictKey> = {
+  monthly: "subform.billingMonthly",
+  annual: "subform.billingAnnual",
+  custom: "subform.billingCustom",
+};
+const STATUS_KEYS: Record<SubscriptionStatus, DictKey> = {
+  active: "subform.statusActive",
+  trial: "subform.statusTrial",
+  paused: "subform.statusPaused",
+  canceled: "subform.statusCanceled",
+};
 const CATEGORIES = [
   "Streaming", "Productivity", "Finance", "Health", "News/Media",
   "Gaming", "Cloud", "Social", "Tools", "Other",
@@ -59,6 +64,7 @@ export function SubscriptionForm({
   initial,
   paymentMethods = [],
 }: SubscriptionFormProps) {
+  const t = useT();
   // Core fields
   const [serviceName, setServiceName] = React.useState(initial?.serviceName ?? "");
   const [category, setCategory] = React.useState(initial?.category ?? "");
@@ -83,9 +89,9 @@ export function SubscriptionForm({
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
-    if (!serviceName.trim()) errs.serviceName = "Service name is required";
-    if (!amount.trim() || isNaN(Number(amount))) errs.amount = "A valid amount is required";
-    if (!nextRenewalDate) errs.nextRenewalDate = "Next renewal date is required";
+    if (!serviceName.trim()) errs.serviceName = t('subform.serviceNameRequired');
+    if (!amount.trim() || isNaN(Number(amount))) errs.amount = t('subform.amountRequired');
+    if (!nextRenewalDate) errs.nextRenewalDate = t('subform.nextRenewalRequired');
     return errs;
   }
 
@@ -132,17 +138,17 @@ export function SubscriptionForm({
       onSubmit={handleSubmit}
       noValidate
       className="flex flex-col gap-4 p-1"
-      aria-label="Subscription form"
+      aria-label={t('subform.ariaLabel')}
     >
       {/* ── Core info ─────────────────────────────────── */}
       <FieldGroup>
         <Label htmlFor="sub-serviceName">
-          Service name <span aria-hidden>*</span>
+          {t('subform.serviceName')} <span aria-hidden>*</span>
         </Label>
         <Input
           id="sub-serviceName"
           type="text"
-          placeholder="e.g. Netflix"
+          placeholder={t('subform.serviceNamePlaceholder')}
           value={serviceName}
           onChange={(e) => setServiceName(e.target.value)}
           aria-required="true"
@@ -160,7 +166,7 @@ export function SubscriptionForm({
       <div className="grid grid-cols-2 gap-3">
         <FieldGroup>
           <Label htmlFor="sub-amount">
-            Amount <span aria-hidden>*</span>
+            {t('subform.amount')} <span aria-hidden>*</span>
           </Label>
           <Input
             id="sub-amount"
@@ -180,7 +186,7 @@ export function SubscriptionForm({
         </FieldGroup>
 
         <FieldGroup>
-          <Label htmlFor="sub-currency">Currency</Label>
+          <Label htmlFor="sub-currency">{t('subform.currency')}</Label>
           <select
             id="sub-currency"
             value={currency}
@@ -196,22 +202,24 @@ export function SubscriptionForm({
 
       <div className="grid grid-cols-2 gap-3">
         <FieldGroup>
-          <Label htmlFor="sub-billing">Billing cycle</Label>
+          <Label htmlFor="sub-billing">{t('subform.billingCycle')}</Label>
           <select
             id="sub-billing"
             value={billingCycle}
             onChange={(e) => setBillingCycle(e.target.value as BillingCycle)}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            {BILLING_CYCLES.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
+            {BILLING_CYCLE_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {t(BILLING_CYCLE_KEYS[value])}
+              </option>
             ))}
           </select>
         </FieldGroup>
 
         {billingCycle === "custom" && (
           <FieldGroup>
-            <Label htmlFor="sub-cycleDays">Cycle days</Label>
+            <Label htmlFor="sub-cycleDays">{t('subform.cycleDays')}</Label>
             <Input
               id="sub-cycleDays"
               type="number"
@@ -226,7 +234,7 @@ export function SubscriptionForm({
 
       <FieldGroup>
         <Label htmlFor="sub-nextRenewal">
-          Next renewal <span aria-hidden>*</span>
+          {t('subform.nextRenewal')} <span aria-hidden>*</span>
         </Label>
         <Input
           id="sub-nextRenewal"
@@ -243,28 +251,30 @@ export function SubscriptionForm({
 
       <div className="grid grid-cols-2 gap-3">
         <FieldGroup>
-          <Label htmlFor="sub-status">Status</Label>
+          <Label htmlFor="sub-status">{t('subform.status')}</Label>
           <select
             id="sub-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            {STATUSES.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
+            {STATUS_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {t(STATUS_KEYS[value])}
+              </option>
             ))}
           </select>
         </FieldGroup>
 
         <FieldGroup>
-          <Label htmlFor="sub-category">Category</Label>
+          <Label htmlFor="sub-category">{t('subform.category')}</Label>
           <select
             id="sub-category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <option value="">— Select —</option>
+            <option value="">{t('subform.categorySelect')}</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -273,7 +283,7 @@ export function SubscriptionForm({
       </div>
 
       <FieldGroup>
-        <Label htmlFor="sub-accountEmail">Account email</Label>
+        <Label htmlFor="sub-accountEmail">{t('subform.accountEmail')}</Label>
         <Input
           id="sub-accountEmail"
           type="email"
@@ -285,11 +295,11 @@ export function SubscriptionForm({
       </FieldGroup>
 
       <FieldGroup>
-        <Label htmlFor="sub-plan">Plan / tier</Label>
+        <Label htmlFor="sub-plan">{t('subform.plan')}</Label>
         <Input
           id="sub-plan"
           type="text"
-          placeholder="e.g. Standard, Premium"
+          placeholder={t('subform.planPlaceholder')}
           value={plan}
           onChange={(e) => setPlan(e.target.value)}
         />
@@ -297,14 +307,14 @@ export function SubscriptionForm({
 
       {paymentMethods.length > 0 && (
         <FieldGroup>
-          <Label htmlFor="sub-pm">Payment method</Label>
+          <Label htmlFor="sub-pm">{t('subform.paymentMethod')}</Label>
           <select
             id="sub-pm"
             value={paymentMethodId}
             onChange={(e) => setPaymentMethodId(e.target.value)}
             className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <option value="">— None —</option>
+            <option value="">{t('subform.paymentMethodNone')}</option>
             {paymentMethods.map((pm) => (
               <option key={pm.id} value={pm.id}>
                 {pm.label} ({pm.brand} ····{pm.last4})
@@ -315,7 +325,7 @@ export function SubscriptionForm({
       )}
 
       <FieldGroup>
-        <Label htmlFor="sub-url">Website URL</Label>
+        <Label htmlFor="sub-url">{t('subform.url')}</Label>
         <Input
           id="sub-url"
           type="url"
@@ -326,11 +336,11 @@ export function SubscriptionForm({
       </FieldGroup>
 
       <FieldGroup>
-        <Label htmlFor="sub-notes">Notes</Label>
+        <Label htmlFor="sub-notes">{t('subform.notes')}</Label>
         <textarea
           id="sub-notes"
           rows={2}
-          placeholder="Any notes…"
+          placeholder={t('subform.notesPlaceholder')}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 resize-none placeholder:text-muted-foreground"
@@ -340,21 +350,21 @@ export function SubscriptionForm({
       {/* ── Credential section ─────────────────────────── */}
       <fieldset className="rounded-lg border border-dashed border-border p-3 flex flex-col gap-3">
         <legend className="px-1 text-xs font-medium text-muted-foreground">
-          Login credentials (optional)
+          {t('subform.credLegend')}
         </legend>
         <FieldGroup>
-          <Label htmlFor="sub-cred-email">Email / username</Label>
+          <Label htmlFor="sub-cred-email">{t('subform.credEmail')}</Label>
           <Input
             id="sub-cred-email"
             type="email"
-            placeholder="Login email"
+            placeholder={t('subform.credEmailPlaceholder')}
             value={credEmail}
             onChange={(e) => setCredEmail(e.target.value)}
             autoComplete="username"
           />
         </FieldGroup>
         <FieldGroup>
-          <Label htmlFor="sub-cred-password">Password</Label>
+          <Label htmlFor="sub-cred-password">{t('subform.credPassword')}</Label>
           <Input
             id="sub-cred-password"
             type="password"
@@ -369,10 +379,10 @@ export function SubscriptionForm({
       {/* ── Actions ────────────────────────────────────── */}
       <div className="flex gap-2 justify-end pt-1">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t('subform.cancel')}
         </Button>
         <Button type="submit">
-          Save
+          {t('subform.save')}
         </Button>
       </div>
     </form>

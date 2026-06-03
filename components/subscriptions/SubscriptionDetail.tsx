@@ -16,6 +16,7 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/use-t";
 
 /** ─── Types ──────────────────────────────────────────────────────────── */
 export interface SubscriptionDetailProps {
@@ -37,6 +38,7 @@ function CopyButton({
   label: string;
   isSecret?: boolean;
 }) {
+  const t = useT();
   const [copied, setCopied] = React.useState(false);
   const [showHint, setShowHint] = React.useState(false);
 
@@ -58,8 +60,8 @@ function CopyButton({
         variant="ghost"
         size="icon-xs"
         onClick={handleCopy}
-        aria-label={`Copy ${label}`}
-        title={`Copy ${label}`}
+        aria-label={t('detail.copyLabel', { label })}
+        title={t('detail.copyLabel', { label })}
         className="text-muted-foreground hover:text-foreground"
       >
         {copied ? (
@@ -74,7 +76,7 @@ function CopyButton({
           role="status"
           aria-live="polite"
         >
-          clears in ~20s
+          {t('detail.clearsIn')}
         </span>
       )}
     </div>
@@ -103,10 +105,11 @@ function DetailRow({
 
 /** ─── Status badge color ─────────────────────────────────────────────── */
 function StatusBadge({ status }: { status: Subscription["status"] }) {
-  if (status === "active") return <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400">Active</Badge>;
-  if (status === "trial") return <Badge variant="secondary">Trial</Badge>;
-  if (status === "paused") return <Badge variant="outline">Paused</Badge>;
-  return <Badge className="bg-red-100 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400">Canceled</Badge>;
+  const t = useT();
+  if (status === "active") return <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400">{t('subs.statusActive')}</Badge>;
+  if (status === "trial") return <Badge variant="secondary">{t('subs.statusTrial')}</Badge>;
+  if (status === "paused") return <Badge variant="outline">{t('subs.statusPaused')}</Badge>;
+  return <Badge className="bg-red-100 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400">{t('subs.statusCanceled')}</Badge>;
 }
 
 /** ─── SubscriptionDetail ─────────────────────────────────────────────── */
@@ -117,6 +120,7 @@ export function SubscriptionDetail({
   onEdit,
   onDelete,
 }: SubscriptionDetailProps) {
+  const t = useT();
   const [showPassword, setShowPassword] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
@@ -126,14 +130,14 @@ export function SubscriptionDetail({
 
   const renewalLabel =
     sub.status === "canceled"
-      ? "Canceled"
+      ? t('detail.renewalCanceled')
       : sub.status === "paused"
-      ? "Paused"
+      ? t('detail.renewalPaused')
       : days < 0
-      ? "Overdue"
+      ? t('detail.renewalOverdue')
       : days === 0
-      ? "Renews today"
-      : `in ${days} day${days !== 1 ? "s" : ""}`;
+      ? t('detail.renewalToday')
+      : t(days !== 1 ? 'detail.renewsInPlural' : 'detail.renewsIn', { n: days });
 
   // Category initial avatar
   const initials = sub.serviceName
@@ -169,7 +173,7 @@ export function SubscriptionDetail({
           )}
         </div>
         <div className="flex gap-1 flex-shrink-0">
-          <Button variant="ghost" size="icon-sm" onClick={onEdit} aria-label="Edit subscription">
+          <Button variant="ghost" size="icon-sm" onClick={onEdit} aria-label={t('detail.editLabel')}>
             <PencilIcon className="size-4" />
           </Button>
           {!confirmDelete ? (
@@ -177,27 +181,27 @@ export function SubscriptionDetail({
               variant="ghost"
               size="icon-sm"
               onClick={() => setConfirmDelete(true)}
-              aria-label="Delete subscription"
+              aria-label={t('detail.deleteLabel')}
               className="text-destructive hover:text-destructive"
             >
               <Trash2Icon className="size-4" />
             </Button>
           ) : (
             <div className="flex items-center gap-1">
-              <span className="text-xs text-destructive font-medium">Delete?</span>
+              <span className="text-xs text-destructive font-medium">{t('detail.deleteConfirmLabel')}</span>
               <Button
                 variant="destructive"
                 size="xs"
                 onClick={onDelete}
               >
-                Yes
+                {t('detail.deleteConfirmYes')}
               </Button>
               <Button
                 variant="ghost"
                 size="xs"
                 onClick={() => setConfirmDelete(false)}
               >
-                No
+                {t('detail.deleteConfirmNo')}
               </Button>
             </div>
           )}
@@ -218,7 +222,7 @@ export function SubscriptionDetail({
       <div className="rounded-xl bg-muted/50 border border-border px-3.5 py-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-            Next renewal
+            {t('detail.nextRenewal')}
           </p>
           <p className="text-sm font-semibold text-foreground mt-0.5">
             {sub.nextRenewalDate}
@@ -240,32 +244,32 @@ export function SubscriptionDetail({
       {/* ── Details grid ────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         {sub.plan && (
-          <DetailRow label="Plan">{sub.plan}</DetailRow>
+          <DetailRow label={t('detail.plan')}>{sub.plan}</DetailRow>
         )}
         {sub.accountEmail && (
-          <DetailRow label="Account email">
+          <DetailRow label={t('detail.accountEmail')}>
             <div className="flex items-center gap-1 min-w-0">
               <span className="truncate">{sub.accountEmail}</span>
-              <CopyButton value={sub.accountEmail} label="account email" />
+              <CopyButton value={sub.accountEmail} label={t('detail.accountEmail')} />
             </div>
           </DetailRow>
         )}
         {paymentMethod && (
-          <DetailRow label="Payment method">
+          <DetailRow label={t('detail.paymentMethod')}>
             <span className="truncate">
               {paymentMethod.label} ····{paymentMethod.last4}
             </span>
           </DetailRow>
         )}
         {sub.url && (
-          <DetailRow label="Website">
+          <DetailRow label={t('detail.website')}>
             <a
               href={sub.url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-primary hover:underline underline-offset-2 truncate"
             >
-              Open site
+              {t('detail.openSite')}
               <ExternalLinkIcon className="size-3.5 flex-shrink-0" />
             </a>
           </DetailRow>
@@ -274,7 +278,7 @@ export function SubscriptionDetail({
 
       {/* ── Notes ────────────────────────────────────────────── */}
       {sub.notes && (
-        <DetailRow label="Notes">
+        <DetailRow label={t('detail.notes')}>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{sub.notes}</p>
         </DetailRow>
       )}
@@ -283,19 +287,19 @@ export function SubscriptionDetail({
       {credential && (
         <div className="rounded-xl border border-dashed border-border p-3.5 flex flex-col gap-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Login credentials
+            {t('detail.credentials')}
           </p>
 
           {/* Username */}
-          <DetailRow label="Username / email">
+          <DetailRow label={t('detail.username')}>
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="truncate flex-1">{credential.username}</span>
-              <CopyButton value={credential.username} label="username" />
+              <CopyButton value={credential.username} label={t('detail.username')} />
             </div>
           </DetailRow>
 
           {/* Password (hidden by default) */}
-          <DetailRow label="Password">
+          <DetailRow label={t('detail.password')}>
             <div className="flex items-center gap-1.5 min-w-0">
               <code
                 className="flex-1 text-sm font-mono tracking-wider min-w-0 truncate select-all"
@@ -318,7 +322,7 @@ export function SubscriptionDetail({
                     <EyeIcon className="size-3.5" />
                   )}
                 </Button>
-                <CopyButton value={credential.password} label="password" isSecret />
+                <CopyButton value={credential.password} label={t('detail.password')} isSecret />
               </div>
             </div>
           </DetailRow>
@@ -327,8 +331,8 @@ export function SubscriptionDetail({
 
       {/* ── Metadata ─────────────────────────────────────────── */}
       <div className="text-[11px] text-muted-foreground space-y-0.5 border-t border-border pt-3">
-        <p>Created: {new Date(sub.createdAt).toLocaleDateString()}</p>
-        <p>Updated: {new Date(sub.updatedAt).toLocaleDateString()}</p>
+        <p>{t('detail.created')} {new Date(sub.createdAt).toLocaleDateString()}</p>
+        <p>{t('detail.updated')} {new Date(sub.updatedAt).toLocaleDateString()}</p>
       </div>
     </div>
   );

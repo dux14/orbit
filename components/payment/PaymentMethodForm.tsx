@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/use-t";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -66,6 +67,7 @@ export function PaymentMethodForm({
   onCancel,
   initial,
 }: PaymentMethodFormProps) {
+  const t = useT();
   const [label, setLabel] = React.useState(initial?.label ?? "");
   const [brand, setBrand] = React.useState<string>(initial?.brand ?? "Visa");
   const [last4, setLast4] = React.useState(initial?.last4 ?? "");
@@ -76,11 +78,11 @@ export function PaymentMethodForm({
   // Inline validation on blur
   function validateField(field: "label" | "last4", value: string): string | undefined {
     if (field === "label") {
-      return value.trim() === "" ? "Card label is required" : undefined;
+      return value.trim() === "" ? t('pmform.cardLabelRequired') : undefined;
     }
     if (field === "last4") {
-      if (value.trim() === "") return "Last 4 digits required";
-      if (!/^\d{4}$/.test(value.trim())) return "Must be exactly 4 digits";
+      if (value.trim() === "") return t('pmform.last4Required');
+      if (!/^\d{4}$/.test(value.trim())) return t('pmform.last4Invalid');
       return undefined;
     }
   }
@@ -119,17 +121,17 @@ export function PaymentMethodForm({
       onSubmit={handleSubmit}
       noValidate
       className="flex flex-col gap-4 p-1"
-      aria-label="Payment method form"
+      aria-label={t('pmform.ariaLabel')}
     >
       {/* ── Label ─────────────────────────────────────── */}
       <FieldGroup>
         <Label htmlFor="pm-label">
-          Card label <span aria-hidden>*</span>
+          {t('pmform.cardLabel')} <span aria-hidden>*</span>
         </Label>
         <Input
           id="pm-label"
           type="text"
-          placeholder="e.g. Personal Visa"
+          placeholder={t('pmform.cardLabelPlaceholder')}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           onBlur={() => handleBlur("label", label)}
@@ -142,7 +144,7 @@ export function PaymentMethodForm({
 
       {/* ── Brand ─────────────────────────────────────── */}
       <FieldGroup>
-        <Label htmlFor="pm-brand">Brand</Label>
+        <Label htmlFor="pm-brand">{t('pmform.brand')}</Label>
         <select
           id="pm-brand"
           value={brand}
@@ -160,7 +162,7 @@ export function PaymentMethodForm({
       {/* ── Last 4 digits ────────────────────────────── */}
       <FieldGroup>
         <Label htmlFor="pm-last4">
-          Last 4 digits <span aria-hidden>*</span>
+          {t('pmform.last4')} <span aria-hidden>*</span>
         </Label>
         <Input
           id="pm-last4"
@@ -186,14 +188,14 @@ export function PaymentMethodForm({
           className={cn(touched.last4 && errors.last4 && "border-destructive")}
         />
         <p id="pm-last4-help" className="text-xs text-muted-foreground">
-          Only the last 4 digits — no full card number stored.
+          {t('pmform.last4Help')}
         </p>
         <ErrorMsg id="pm-last4-err" msg={touched.last4 ? errors.last4 : undefined} />
       </FieldGroup>
 
       {/* ── Color ─────────────────────────────────────── */}
       <FieldGroup>
-        <Label htmlFor="pm-color">Card colour</Label>
+        <Label htmlFor="pm-color">{t('pmform.colour')}</Label>
         <div className="flex items-center gap-3">
           <input
             id="pm-color"
@@ -201,7 +203,7 @@ export function PaymentMethodForm({
             value={color}
             onChange={(e) => setColor(e.target.value)}
             className="h-8 w-12 cursor-pointer rounded-md border border-input bg-transparent p-0.5 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-            aria-label="Card accent colour"
+            aria-label={t('pmform.colourAriaLabel')}
           />
           <span className="text-xs text-muted-foreground font-mono">{color}</span>
         </div>
@@ -210,10 +212,10 @@ export function PaymentMethodForm({
       {/* ── Actions ───────────────────────────────────── */}
       <div className="flex gap-2 justify-end pt-1">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t('pmform.cancel')}
         </Button>
         <Button type="submit">
-          {initial ? "Save changes" : "Add card"}
+          {initial ? t('pmform.save') : t('pmform.addCard')}
         </Button>
       </div>
     </form>

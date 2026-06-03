@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { PlusIcon, PencilIcon, Trash2Icon, CreditCardIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n/use-t";
 
 // ─── Card tile ──────────────────────────────────────────────────────────────
 
@@ -87,21 +88,21 @@ function CardTile({ pm, onEdit, onDelete }: CardTileProps) {
 // ─── Empty state ────────────────────────────────────────────────────────────
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
       <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
         <CreditCardIcon className="size-7 text-muted-foreground" />
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-foreground">No cards saved yet</p>
+        <p className="text-sm font-medium text-foreground">{t('cards.emptyTitle')}</p>
         <p className="text-xs text-muted-foreground max-w-xs">
-          Add a card alias to track which subscriptions use it.
-          Only the last 4 digits are stored — no full card number.
+          {t('cards.emptyBody')}
         </p>
       </div>
       <Button onClick={onAdd} size="sm" className="cursor-pointer">
         <PlusIcon />
-        Add card
+        {t('cards.addCard')}
       </Button>
     </div>
   );
@@ -116,23 +117,23 @@ interface DeleteDialogProps {
 }
 
 function DeleteDialog({ pm, onConfirm, onCancel }: DeleteDialogProps) {
+  const t = useT();
   return (
     <Dialog open={pm !== null} onOpenChange={(open) => { if (!open) onCancel(); }}>
       <DialogContent aria-describedby="delete-card-desc">
         <DialogHeader>
-          <DialogTitle>Delete card?</DialogTitle>
+          <DialogTitle>{t('cards.deleteTitle')}</DialogTitle>
           <DialogDescription id="delete-card-desc">
             Remove <span className="font-medium">{pm?.label}</span>{" "}
-            ({pm?.brand} ···· {pm?.last4})? Any subscriptions linked to this card will
-            lose the reference.
+            ({pm?.brand} ···· {pm?.last4})? {t('cards.deleteDesc')}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} className="cursor-pointer">
-            Cancel
+            {t('cards.deleteCancel')}
           </Button>
           <Button variant="destructive" onClick={onConfirm} className="cursor-pointer">
-            Delete
+            {t('cards.deleteConfirm')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -143,6 +144,7 @@ function DeleteDialog({ pm, onConfirm, onCancel }: DeleteDialogProps) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function PaymentMethodsPage() {
+  const t = useT();
   // Store
   const paymentMethods = useStore(vaultStore, (s) => s.data?.paymentMethods ?? []);
   const upsertPaymentMethod = useStore(vaultStore, (s) => s.upsertPaymentMethod);
@@ -182,11 +184,11 @@ export default function PaymentMethodsPage() {
     <>
       {/* ── Header ───────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-3xl text-foreground">Cards</h1>
+        <h1 className="font-heading text-3xl text-foreground">{t('cards.title')}</h1>
         {paymentMethods.length > 0 && (
           <Button size="sm" onClick={handleAdd} className="cursor-pointer">
             <PlusIcon />
-            Add card
+            {t('cards.addCard')}
           </Button>
         )}
       </div>
@@ -197,7 +199,7 @@ export default function PaymentMethodsPage() {
       ) : (
         <div
           role="list"
-          aria-label="Saved payment cards"
+          aria-label={t('cards.ariaList')}
           className="flex flex-col gap-3"
         >
           {paymentMethods.map((pm) => (
@@ -216,7 +218,7 @@ export default function PaymentMethodsPage() {
         <SheetContent side="bottom" className="max-h-[92dvh] overflow-y-auto rounded-t-2xl">
           <SheetHeader className="pb-2">
             <SheetTitle>
-              {editPm ? "Edit card" : "Add card"}
+              {editPm ? t('cards.sheetEdit') : t('cards.sheetAdd')}
             </SheetTitle>
           </SheetHeader>
           <PaymentMethodForm

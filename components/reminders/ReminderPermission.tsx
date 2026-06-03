@@ -3,10 +3,12 @@
 import * as React from "react";
 import { BellIcon, BellOffIcon } from "lucide-react";
 import { requestPermission, isNotificationSupported } from "@/lib/services/reminders";
+import { useT } from "@/lib/i18n/use-t";
 
 type PermState = NotificationPermission | "unknown";
 
 export function ReminderPermission() {
+  const t = useT();
   const [perm, setPerm] = React.useState<PermState>("unknown");
 
   // Read current permission on mount (client only)
@@ -25,7 +27,7 @@ export function ReminderPermission() {
     return (
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <BellOffIcon className="size-3.5 flex-shrink-0" aria-hidden="true" />
-        Notifications blocked — enable them in your browser settings.
+        {t('reminders.blocked')}
       </p>
     );
   }
@@ -41,10 +43,10 @@ export function ReminderPermission() {
       type="button"
       onClick={handleEnable}
       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      aria-label="Enable renewal reminders"
+      aria-label={t('reminders.enable')}
     >
       <BellIcon className="size-3.5 flex-shrink-0" aria-hidden="true" />
-      Enable renewal reminders
+      {t('reminders.enable')}
     </button>
   );
 }

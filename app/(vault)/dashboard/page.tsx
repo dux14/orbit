@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircleIcon, PlusIcon, TrendingUpIcon, CalendarIcon } from "lucide-react";
 import { notifyDueRenewals } from "@/lib/services/reminders";
 import { ReminderPermission } from "@/components/reminders/ReminderPermission";
+import { useT } from "@/lib/i18n/use-t";
 
 // ─── Currency formatting ────────────────────────────────────────────────────────
 function fmtCurrency(amount: number, currency: string, locale: string): string {
@@ -56,6 +57,7 @@ const CHART_FALLBACK_COLORS = [
 
 // ─── FX error banner ───────────────────────────────────────────────────────────
 function FxErrorBanner({ message }: { message: string }) {
+  const t = useT();
   return (
     <div
       role="alert"
@@ -64,14 +66,14 @@ function FxErrorBanner({ message }: { message: string }) {
     >
       <AlertCircleIcon className="mt-0.5 size-4 flex-shrink-0" aria-hidden="true" />
       <div className="flex-1 min-w-0">
-        <span className="font-medium">Exchange rates unavailable</span>
-        {" — "}
-        totals may be incomplete.{" "}
+        <span className="font-medium">{t('dashboard.fxUnavailable')}</span>
+        {" "}
+        {t('dashboard.fxUnavailableSuffix')}{" "}
         <Link
           href="/settings"
           className="underline underline-offset-2 hover:no-underline font-medium"
         >
-          Set a manual rate in Settings.
+          {t('dashboard.fxSetManual')}
         </Link>
         {message && (
           <span className="block mt-0.5 text-xs opacity-70 truncate">{message}</span>
@@ -83,10 +85,11 @@ function FxErrorBanner({ message }: { message: string }) {
 
 // ─── Renewal day badge ─────────────────────────────────────────────────────────
 function DayBadge({ days }: { days: number }) {
+  const t = useT();
   if (days === 0)
     return (
       <Badge className="bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400">
-        Today
+        {t('dashboard.renewsToday')}
       </Badge>
     );
   if (days <= 3)
@@ -174,6 +177,7 @@ function BreakdownCard({
   locale: string;
   emptyLabel?: string;
 }) {
+  const t = useT();
   const maxAmount = Math.max(...data.map((d) => d.amount), 1);
   return (
     <section
@@ -182,7 +186,7 @@ function BreakdownCard({
     >
       <h2 className="font-heading text-base text-foreground leading-tight">{title}</h2>
       {data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{emptyLabel ?? "No data"}</p>
+        <p className="text-sm text-muted-foreground">{emptyLabel ?? t('dashboard.noData')}</p>
       ) : (
         <div className="flex flex-col gap-2">
           {data.map((row, i) => (
@@ -214,6 +218,7 @@ function HeroCard({
   currency: string;
   locale: string;
 }) {
+  const t = useT();
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-7 flex flex-col gap-1">
       {/* Decorative radial glow */}
@@ -222,11 +227,11 @@ function HeroCard({
         aria-hidden="true"
       />
       <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        Monthly spend
+        {t('dashboard.monthlySpend')}
       </p>
       <p
         className="font-heading text-4xl md:text-5xl font-bold text-foreground tabular-nums leading-none"
-        aria-label={`Monthly total: ${fmtCurrency(monthly, currency, locale)}`}
+        aria-label={`${t('dashboard.monthlySpend')}: ${fmtCurrency(monthly, currency, locale)}`}
       >
         {fmtCurrency(monthly, currency, locale)}
       </p>
@@ -236,7 +241,7 @@ function HeroCard({
           <span className="font-medium text-foreground/90 tabular-nums">
             {fmtCurrency(annual, currency, locale)}
           </span>{" "}
-          per year
+          {t('dashboard.perYear')}
         </p>
       </div>
     </div>
@@ -253,24 +258,25 @@ function UpcomingRenewals({
   currency: string;
   locale: string;
 }) {
+  const t = useT();
   const today = new Date();
   const shown = upcoming.slice(0, 8);
 
   return (
     <section
       className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-4"
-      aria-label="Upcoming renewals"
+      aria-label={t('dashboard.upcomingRenewals')}
     >
       <div className="flex items-center gap-2">
         <CalendarIcon className="size-4 text-muted-foreground" aria-hidden="true" />
         <h2 className="font-heading text-base text-foreground leading-tight">
-          Upcoming renewals
+          {t('dashboard.upcomingRenewals')}
         </h2>
       </div>
       {shown.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No upcoming renewals.</p>
+        <p className="text-sm text-muted-foreground">{t('dashboard.noUpcomingRenewals')}</p>
       ) : (
-        <ol className="flex flex-col divide-y divide-border" aria-label="Renewal list">
+        <ol className="flex flex-col divide-y divide-border" aria-label={t('dashboard.upcomingRenewals')}>
           {shown.map((sub) => {
             const days = daysUntilRenewal(sub.nextRenewalDate, today);
             return (
@@ -302,6 +308,7 @@ function UpcomingRenewals({
 
 // ─── Empty state ───────────────────────────────────────────────────────────────
 function EmptyState() {
+  const t = useT();
   return (
     <div className="flex flex-col items-center justify-center gap-6 py-20 text-center">
       <div className="relative">
@@ -309,10 +316,9 @@ function EmptyState() {
         <OrbitLogo size={96} className="relative drop-shadow-sm" />
       </div>
       <div className="space-y-1.5">
-        <h2 className="font-heading text-2xl text-foreground">Nothing in orbit yet</h2>
+        <h2 className="font-heading text-2xl text-foreground">{t('dashboard.emptyTitle')}</h2>
         <p className="text-sm text-muted-foreground max-w-xs">
-          Add your first subscription to see your spending at a glance — totals,
-          breakdowns, and upcoming renewals all in one place.
+          {t('dashboard.emptyBody')}
         </p>
       </div>
       <Link
@@ -320,7 +326,7 @@ function EmptyState() {
         className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/80 transition-colors"
       >
         <PlusIcon className="size-4" />
-        Add a subscription
+        {t('dashboard.emptyAddBtn')}
       </Link>
     </div>
   );
@@ -351,14 +357,17 @@ export default function DashboardPage() {
     notifyDueRenewals(subscriptions, settings.reminderLeadDays);
   }, [subscriptions, settings.reminderLeadDays]);
 
+  const t = useT();
   const { primaryCurrency, locale } = settings;
 
   // Resolve payment method IDs → labels
+  const noCardLabel = t('dashboard.noCard');
   const pmLabelMap = React.useMemo(() => {
-    const m: Record<string, string> = { none: "No card" };
+    const m: Record<string, string> = { none: noCardLabel };
     for (const pm of paymentMethods) m[pm.id] = `${pm.brand} ····${pm.last4}`;
     return m;
-  }, [paymentMethods]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentMethods, noCardLabel]);
 
   // Sort breakdowns descending by value
   const categoryRows = React.useMemo(
@@ -393,7 +402,7 @@ export default function DashboardPage() {
       {/* Page heading */}
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-2xl md:text-3xl text-foreground leading-tight">
-          Dashboard
+          {t('dashboard.title')}
         </h1>
         {!isEmpty && (
           <Link
@@ -401,7 +410,7 @@ export default function DashboardPage() {
             className="hidden md:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-border bg-background text-sm font-medium hover:bg-muted transition-colors"
           >
             <PlusIcon className="size-3.5" />
-            Add
+            {t('dashboard.add')}
           </Link>
         )}
       </div>
@@ -425,14 +434,14 @@ export default function DashboardPage() {
           {/* ── Orbit visualization ──────────────────────────────── */}
           <section
             className="rounded-2xl border border-border bg-card p-5 flex flex-col items-center gap-3"
-            aria-label="Subscription orbit visualization"
+            aria-label={t('dashboard.yourOrbit')}
           >
             <div className="flex items-center justify-between w-full">
               <h2 className="font-heading text-base text-foreground leading-tight">
-                Your orbit
+                {t('dashboard.yourOrbit')}
               </h2>
               <span className="text-xs text-muted-foreground">
-                {subscriptions.filter(s => s.status === "active" || s.status === "trial").length} active
+                {subscriptions.filter(s => s.status === "active" || s.status === "trial").length} {t('dashboard.active')}
               </span>
             </div>
             <OrbitViz
@@ -464,18 +473,18 @@ export default function DashboardPage() {
           {/* ── Breakdowns ───────────────────────────────────────── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <BreakdownCard
-              title="By category"
+              title={t('dashboard.byCategory')}
               data={categoryRows}
               currency={primaryCurrency}
               locale={locale}
-              emptyLabel="No category data yet."
+              emptyLabel={t('dashboard.noCategoryData')}
             />
             <BreakdownCard
-              title="By payment method"
+              title={t('dashboard.byPaymentMethod')}
               data={paymentRows}
               currency={primaryCurrency}
               locale={locale}
-              emptyLabel="No payment method data yet."
+              emptyLabel={t('dashboard.noPaymentData')}
             />
           </div>
 

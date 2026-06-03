@@ -13,6 +13,7 @@ import {
   SearchIcon,
   SlidersHorizontalIcon,
 } from "lucide-react";
+import { useT } from "@/lib/i18n/use-t";
 
 /** ─── Types ──────────────────────────────────────────────────────────── */
 export type SortKey = "renewal" | "amount" | "alpha";
@@ -45,17 +46,18 @@ function categoryColor(cat: string): string {
 
 /** ─── Renewal badge ─────────────────────────────────────────────────── */
 function RenewalBadge({ sub }: { sub: Subscription }) {
+  const t = useT();
   if (sub.status === "canceled") {
     return (
       <Badge variant="outline" className="text-muted-foreground">
-        Canceled
+        {t('subs.statusCanceled')}
       </Badge>
     );
   }
   if (sub.status === "paused") {
     return (
       <Badge variant="secondary" className="text-muted-foreground">
-        Paused
+        {t('subs.statusPaused')}
       </Badge>
     );
   }
@@ -65,14 +67,14 @@ function RenewalBadge({ sub }: { sub: Subscription }) {
   if (days < 0) {
     return (
       <Badge className="bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400">
-        Overdue
+        {t('subs.renewalOverdue')}
       </Badge>
     );
   }
   if (days === 0) {
     return (
       <Badge className="bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400">
-        Renews today
+        {t('subs.renewalToday')}
       </Badge>
     );
   }
@@ -86,7 +88,7 @@ function RenewalBadge({ sub }: { sub: Subscription }) {
   if (sub.status === "trial") {
     return (
       <Badge variant="secondary">
-        Trial · {days}d
+        {t('subs.statusTrial')} · {days}d
       </Badge>
     );
   }
@@ -170,6 +172,7 @@ function EmptyState({
   filtered: boolean;
   onAdd: () => void;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center justify-center gap-6 py-20 text-center">
       <div className="relative">
@@ -179,21 +182,21 @@ function EmptyState({
       {filtered ? (
         <>
           <div className="space-y-1">
-            <p className="text-base font-medium text-foreground">No matches</p>
-            <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+            <p className="text-base font-medium text-foreground">{t('subs.emptyNoMatchTitle')}</p>
+            <p className="text-sm text-muted-foreground">{t('subs.emptyNoMatchBody')}</p>
           </div>
         </>
       ) : (
         <>
           <div className="space-y-1">
-            <p className="font-heading text-xl text-foreground">Nothing in orbit yet</p>
+            <p className="font-heading text-xl text-foreground">{t('subs.emptyTitle')}</p>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Track every subscription — know exactly what renews, when, and for how much.
+              {t('subs.emptyBody')}
             </p>
           </div>
           <Button onClick={onAdd} className="gap-1.5">
             <PlusIcon className="size-4" />
-            Add your first subscription
+            {t('subs.emptyAddBtn')}
           </Button>
         </>
       )}
@@ -207,6 +210,7 @@ export function SubscriptionList({
   onAdd,
   onView,
 }: SubscriptionListProps) {
+  const t = useT();
   const [search, setSearch] = React.useState("");
   const [filterStatus, setFilterStatus] = React.useState("");
   const [filterCategory, setFilterCategory] = React.useState("");
@@ -271,11 +275,11 @@ export function SubscriptionList({
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-2xl md:text-3xl text-foreground leading-tight">
-          Subscriptions
+          {t('subs.title')}
         </h1>
         <Button onClick={onAdd} size="sm" className="gap-1.5 hidden md:inline-flex">
           <PlusIcon className="size-4" />
-          Add
+          {t('subs.add')}
         </Button>
       </div>
 
@@ -285,18 +289,18 @@ export function SubscriptionList({
           <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
-            placeholder="Search subscriptions…"
+            placeholder={t('subs.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-9"
-            aria-label="Search subscriptions"
+            aria-label={t('subs.searchLabel')}
           />
         </div>
         <Button
           variant={showFilters || isFiltered ? "secondary" : "outline"}
           size="icon"
           onClick={() => setShowFilters((p) => !p)}
-          aria-label="Toggle filters"
+          aria-label={t('subs.filterLabel')}
           className="h-9 w-9 flex-shrink-0"
         >
           <SlidersHorizontalIcon className="size-4" />
@@ -307,59 +311,59 @@ export function SubscriptionList({
       {showFilters && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-xl bg-muted/50 border border-border">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Status</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('subs.filterStatus')}</label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className={selectCls}
-              aria-label="Filter by status"
+              aria-label={t('subs.filterStatus')}
             >
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="trial">Trial</option>
-              <option value="paused">Paused</option>
-              <option value="canceled">Canceled</option>
+              <option value="">{t('subs.filterAll')}</option>
+              <option value="active">{t('subs.statusActive')}</option>
+              <option value="trial">{t('subs.statusTrial')}</option>
+              <option value="paused">{t('subs.statusPaused')}</option>
+              <option value="canceled">{t('subs.statusCanceled')}</option>
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Category</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('subs.filterCategory')}</label>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className={selectCls}
-              aria-label="Filter by category"
+              aria-label={t('subs.filterCategory')}
             >
-              <option value="">All</option>
+              <option value="">{t('subs.filterAll')}</option>
               {allCategories.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Currency</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('subs.filterCurrency')}</label>
             <select
               value={filterCurrency}
               onChange={(e) => setFilterCurrency(e.target.value)}
               className={selectCls}
-              aria-label="Filter by currency"
+              aria-label={t('subs.filterCurrency')}
             >
-              <option value="">All</option>
+              <option value="">{t('subs.filterAll')}</option>
               {allCurrencies.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">Sort by</label>
+            <label className="text-xs font-medium text-muted-foreground">{t('subs.filterSortBy')}</label>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
               className={selectCls}
-              aria-label="Sort subscriptions"
+              aria-label={t('subs.filterSortBy')}
             >
-              <option value="renewal">Next renewal</option>
-              <option value="amount">Cost (high → low)</option>
-              <option value="alpha">A → Z</option>
+              <option value="renewal">{t('subs.sortRenewal')}</option>
+              <option value="amount">{t('subs.sortAmount')}</option>
+              <option value="alpha">{t('subs.sortAlpha')}</option>
             </select>
           </div>
         </div>
@@ -369,7 +373,7 @@ export function SubscriptionList({
       {filtered.length === 0 ? (
         <EmptyState filtered={isFiltered} onAdd={onAdd} />
       ) : (
-        <div className="flex flex-col gap-2" role="list" aria-label="Subscriptions">
+        <div className="flex flex-col gap-2" role="list" aria-label={t('subs.ariaList')}>
           {filtered.map((sub) => (
             <div key={sub.id} role="listitem">
               <SubscriptionCard sub={sub} onClick={() => onView(sub)} />
@@ -382,7 +386,7 @@ export function SubscriptionList({
       <button
         type="button"
         onClick={onAdd}
-        aria-label="Add subscription"
+        aria-label={t('subs.mobileAddLabel')}
         className={cn(
           "fixed bottom-20 right-4 md:hidden z-20",
           "size-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30",
