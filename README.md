@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Orbit 🪐
 
-## Getting Started
+A mobile-first, **local-first, zero-knowledge** personal hub for your subscriptions and accounts. Your subscriptions orbit you — see what you pay, with which email, on which card, and when each one renews, all in one place. Credentials are encrypted on your device and never leave it.
 
-First, run the development server:
+> **Phase 1** — 100% local (IndexedDB), no backend, installable PWA. Phase 2 (encrypted cloud sync) is planned — see [`docs/`](docs/).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Highlights
+
+- **Zero-knowledge vault** — a master password derives an AES-256-GCM key via **Argon2id** (WebCrypto). Decrypted data lives only in memory; everything on disk is ciphertext. There is **no password recovery** (by design) — mitigated by an encrypted export/import.
+- **Subscriptions** — manual CRUD with service, email, plan, amount + currency, billing cycle, next renewal, status, payment method, URL, notes, and an optional encrypted credential.
+- **Multi-currency dashboard** — totals normalized to monthly/annual in your primary currency, converted via a cached FX API with an editable manual-rate fallback; breakdowns by category and payment method; the "orbit" visualization (planet size ≈ cost, color ≈ category).
+- **Renewal reminders** — in-app "renews in X days" badges + browser notifications (PWA).
+- **PCI-safe cards** — only alias + brand + last 4 + color are ever stored (never a full card number).
+- **Encrypted backup** — export/import a `.orbit` file; useless without your master password.
+- **Polish** — pastel light/dark themes, auto-lock on inactivity + tab hide, clipboard auto-clear on password copy, WCAG AA, es/en.
+
+## Stack
+
+Next.js 16 (App Router) · TypeScript · Tailwind v4 · shadcn/ui · Zustand · Dexie (IndexedDB) · hash-wasm (Argon2id) · Serwist (PWA) · Vitest + Testing Library · Playwright · pnpm · Vercel.
+
+## Architecture
+
+Five decoupled layers so Phase 2 cloud sync can be added without UI rewrites:
+
+```
+UI (Next.js client components for vault screens) + PWA (Serwist)
+  → State (Zustand; decrypted data in memory only; auto-lock)
+    → Domain (pure, fully unit-tested: cost normalization, FX, renewals, totals)
+      → Crypto (Argon2id → AES-256-GCM; lazy-loaded wasm; verifier)
+        → Persistence (Repository over Dexie; stores only encrypted blobs + KDF meta)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Develop
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+pnpm dev          # http://localhost:3000
+pnpm test         # unit + component (Vitest)
+pnpm test:e2e     # Playwright e2e (requires a local Chrome)
+pnpm build        # production build (uses --webpack for the Serwist plugin)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Security notes
 
-## Learn More
+Master password never persisted · AES-256-GCM with a fresh IV per operation · verifier validates unlock without storing the password · strict nonce-based CSP + security headers · no telemetry on vault data · secrets never logged.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with [Claude Code](https://claude.com/claude-code).
