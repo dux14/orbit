@@ -30,8 +30,9 @@ export function BottomTabNav() {
             href={href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              // layout
-              "flex flex-1 flex-col items-center justify-center gap-1 py-2 min-h-[3.5rem]",
+              // layout — bar height comes from the shell token so main's
+              // pb-[var(--app-tabbar-total)] compensation matches exactly
+              "flex flex-1 flex-col items-center justify-center gap-1 h-[var(--app-tabbar-h)]",
               // typography
               "text-[10px] font-medium leading-tight",
               // transitions
