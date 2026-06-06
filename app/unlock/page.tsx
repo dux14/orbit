@@ -57,13 +57,13 @@ export default function UnlockPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(3.5rem,calc(env(safe-area-inset-bottom)+2.5rem))]">
+    <div className="flex min-h-dvh flex-col items-center bg-background px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(3.5rem,calc(env(safe-area-inset-bottom)+2.5rem))]">
       {/* Theme toggle — top-right */}
       <div className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))]">
         <ThemeToggle />
       </div>
 
-      <main className="w-full max-w-sm space-y-8">
+      <main className="w-full max-w-sm space-y-8 my-auto">
         {/* ── Logo + heading ─────────────────────────────────────────── */}
         <div className="flex flex-col items-center gap-4 text-center">
           <OrbitLogo size={56} className="drop-shadow-md" />
