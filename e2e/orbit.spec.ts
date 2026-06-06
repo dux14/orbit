@@ -224,3 +224,40 @@ test('theme toggle: dark mode persists across reload', async ({ page }) => {
   // .dark class should still be present (persisted theme)
   await expect(page.locator('html')).toHaveClass(/dark/, { timeout: 5_000 });
 });
+
+// ── Test 4: add subscription with a NEW card → card appears in Payment Methods ──
+
+async function gotoCards(page: import('@playwright/test').Page) {
+  await page.getByRole('link', { name: /^(cards|tarjetas)$/i }).filter({ visible: true }).click();
+  await page.waitForURL('**/payment-methods', { timeout: 10_000 });
+}
+
+test('create subscription with a new inline card, then see it in Payment Methods', async ({ page }) => {
+  await createVault(page);
+  await gotoSubscriptions(page);
+
+  const addBtn = page.getByRole('button', { name: /add subscription/i }).or(
+    page.getByRole('button', { name: /^add$/i }),
+  );
+  await addBtn.first().click();
+
+  // Essential block
+  await page.getByLabel('Service name').fill('Spotify');
+  await page.getByLabel('Amount').fill('9.99');
+  await page.getByLabel('Next renewal').fill('2026-12-31');
+
+  // Card picker: open the inline new-card form
+  await page.getByRole('radio', { name: /new card/i }).click();
+  await page.getByLabel(/alias/i).fill('Gift Visa');
+  await page.getByLabel(/last 4 digits/i).fill('4242');
+
+  await page.getByRole('button', { name: /^save$/i }).click();
+
+  // Subscription appears
+  await expect(page.getByRole('button', { name: /spotify/i })).toBeVisible({ timeout: 10_000 });
+
+  // The new card now lives in Payment Methods (same encrypted store)
+  await gotoCards(page);
+  await expect(page.getByText(/gift visa/i)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/4242/)).toBeVisible();
+});
