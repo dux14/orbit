@@ -57,6 +57,8 @@ export function PaymentMethodPicker({
   const t = useT();
   const [creating, setCreating] = React.useState(false);
   const [draft, setDraft] = React.useState<NewCardDraft>(EMPTY_DRAFT);
+  // A partially-typed last4 would be silently dropped on submit — warn inline.
+  const last4Incomplete = draft.last4.length > 0 && draft.last4.length < 4;
 
   function updateDraft(patch: Partial<NewCardDraft>) {
     const next = { ...draft, ...patch };
@@ -210,7 +212,20 @@ export function PaymentMethodPicker({
                 onChange={(e) =>
                   updateDraft({ last4: e.target.value.replace(/\D/g, "").slice(0, 4) })
                 }
+                aria-describedby={last4Incomplete ? "newcard-last4-err" : undefined}
+                aria-invalid={last4Incomplete ? true : undefined}
+                className={cn(last4Incomplete && "border-destructive")}
               />
+              {last4Incomplete && (
+                <p
+                  id="newcard-last4-err"
+                  role="alert"
+                  aria-live="polite"
+                  className="text-xs text-destructive"
+                >
+                  {t("subform.newCardLast4Invalid")}
+                </p>
+              )}
             </div>
           </div>
 

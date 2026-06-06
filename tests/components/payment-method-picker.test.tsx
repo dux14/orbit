@@ -52,4 +52,16 @@ describe('PaymentMethodPicker', () => {
     await userEvent.type(last4, 'a1b2c3d4e5');
     expect(last4.value).toBe('1234');
   });
+
+  it('shows an inline error while last4 is incomplete and clears it at 4 digits', async () => {
+    render(
+      <PaymentMethodPicker paymentMethods={[]} value="" onChange={vi.fn()} onNewCardChange={vi.fn()} />,
+    );
+    await userEvent.click(screen.getByRole('radio', { name: /new card/i }));
+    const last4 = screen.getByLabelText(/last 4 digits/i);
+    await userEvent.type(last4, '12');
+    expect(screen.getByRole('alert')).toHaveTextContent(/exactly 4 digits/i);
+    await userEvent.type(last4, '34');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });
