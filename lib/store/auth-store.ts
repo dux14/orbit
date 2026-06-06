@@ -20,9 +20,15 @@ export const useAuthStore = create<AuthState>((set) => ({
    *  Returns an unsubscribe fn (call from an effect cleanup). */
   init: () => {
     const supabase = createClient();
-    void supabase.auth.getSession().then(({ data }) => {
-      set({ session: data.session, user: data.session?.user ?? null, initialized: true });
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        set({ session: data.session, user: data.session?.user ?? null, initialized: true });
+      })
+      .catch(() => {
+        // Even if the initial fetch fails, the UI must leave its loading state.
+        set({ initialized: true });
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       set({ session, user: session?.user ?? null, initialized: true });
     });
