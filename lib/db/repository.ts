@@ -1,10 +1,12 @@
 import { db } from './database';
 import type { VaultMeta, Settings, FxRatesCache } from '@/lib/types';
+import type { LocalVaultRef } from '@/lib/sync/types';
 
 const META_KEY = 'meta';
 const BLOB_KEY = 'blob';
 const SETTINGS_KEY = 'settings';
 const FX_KEY = 'fx';
+const SYNC_KEY = 'sync';
 
 export const repository = {
   async vaultExists(): Promise<boolean> {
@@ -37,9 +39,15 @@ export const repository = {
   async saveFxCache(fx: FxRatesCache): Promise<void> {
     await db.fx.put({ key: FX_KEY, value: fx });
   },
+  async getSyncState(): Promise<LocalVaultRef | undefined> {
+    return (await db.sync.get(SYNC_KEY))?.value;
+  },
+  async saveSyncState(ref: LocalVaultRef): Promise<void> {
+    await db.sync.put({ key: SYNC_KEY, value: ref });
+  },
   async wipeVault(): Promise<void> {
-    await db.transaction('rw', db.meta, db.blob, db.settings, db.fx, async () => {
-      await Promise.all([db.meta.clear(), db.blob.clear(), db.settings.clear(), db.fx.clear()]);
+    await db.transaction('rw', db.meta, db.blob, db.settings, db.fx, db.sync, async () => {
+      await Promise.all([db.meta.clear(), db.blob.clear(), db.settings.clear(), db.fx.clear(), db.sync.clear()]);
     });
   },
 };
