@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 /** Display / heading font — geometric grotesk for Orbit's premium feel */
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
   variable: "--font-space-grotesk",
   display: "swap",
 });
