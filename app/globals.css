@@ -69,6 +69,16 @@
 
 /* ─── Orbit pastel light theme ─────────────────────────────────────────────── */
 :root {
+  /* ── App shell metrics (S7) ─────────────────────────────────────────────
+     Bar heights are fixed; safe-area insets resolve to 0px outside standalone
+     (i.e. in a normal browser), so these calcs are correct on desktop/web too. */
+  --app-header-h: 3.5rem;            /* mobile top bar (matches h-14) */
+  --app-tabbar-h: 3.5rem;            /* bottom tab bar (matches min-h-[3.5rem]) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-header-total: calc(var(--app-header-h) + var(--safe-top));
+  --app-tabbar-total: calc(var(--app-tabbar-h) + var(--safe-bottom));
+
   /* Surfaces */
   --background: oklch(0.978 0.008 280);        /* soft lavender-white */
   --foreground: oklch(0.22 0.028 275);          /* deep violet-slate — AA on bg */
