@@ -60,8 +60,9 @@ function CardTile({ pm, onEdit, onDelete }: CardTileProps) {
         </p>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+      {/* Actions — always visible below md (touch has no hover; an invisible
+          but clickable Delete would fire on first tap), hover/focus-revealed on md+ */}
+      <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
         <Button
           variant="ghost"
           size="icon-sm"
