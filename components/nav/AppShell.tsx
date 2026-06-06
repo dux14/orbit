@@ -37,7 +37,7 @@ export function AppShell({ children }: AppShellProps) {
         id="main-content"
         tabIndex={-1}
         aria-label="Main content"
-        className="flex-1 md:ml-56 flex flex-col min-h-dvh pt-[var(--app-header-total)] md:pt-0 pb-[var(--app-tabbar-total)] md:pb-0 outline-none"
+        className="flex-1 min-w-0 md:ml-56 flex flex-col min-h-dvh pt-[var(--app-header-total)] md:pt-0 pb-[var(--app-tabbar-total)] md:pb-0 outline-none"
       >
         {/* Mobile header — visible only on < md */}
         <header className="fixed md:hidden inset-x-0 top-0 z-30 flex items-center justify-between px-4 h-[var(--app-header-total)] pt-[var(--safe-top)] border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
