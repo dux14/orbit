@@ -19,7 +19,7 @@ export function BottomTabNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80"
+      className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 pb-[var(--safe-bottom)]"
     >
       {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
         const isActive = pathname === href || pathname.startsWith(href + "/");
