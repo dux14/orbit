@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("manifest serves plum theme_color and valid icons", async ({ request }) => {
+test("manifest serves dark theme_color and valid icons", async ({ request }) => {
   const res = await request.get("/manifest.json");
   expect(res.ok()).toBeTruthy();
   const manifest = await res.json();
