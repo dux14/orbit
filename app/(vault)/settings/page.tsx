@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { settingsStore, useSettingsStore } from '@/lib/store/settings-store';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { SyncStatus } from '@/components/sync/sync-status';
 import { vaultStore } from '@/lib/store/vault-store';
 import { repository } from '@/lib/db/repository';
 import {
@@ -176,6 +177,7 @@ function AccountSection() {
             <span className="text-sm text-foreground">
               {t('settings.signedInAs', { email: user.email ?? '' })}
             </span>
+            <SyncStatus />
             <Button
               type="button"
               variant="outline"
