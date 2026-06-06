@@ -51,3 +51,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Brainstorming visual companion artifacts
+.superpowers/
