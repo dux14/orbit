@@ -23,7 +23,8 @@ for (const vp of VIEWPORTS) {
     const htmlFontSize = await page.evaluate(
       () => getComputedStyle(document.documentElement).fontSize,
     );
-    expect(htmlFontSize).toBe("17.5px");
+    // 109.375% of the 16px browser default — tolerate sub-pixel rounding
+    expect(parseFloat(htmlFontSize)).toBeCloseTo(17.5, 1);
 
     await page.screenshot({
       path: `e2e/__screenshots__/s01-onboarding-${vp.name}.png`,
@@ -31,11 +32,7 @@ for (const vp of VIEWPORTS) {
     });
   });
 
-  test(`unlock screen renders @ ${vp.name}`, async ({ page }) => {
-    // Seed a vault so /unlock doesn't bounce to /onboarding.
-    await page.addInitScript(() => {
-      // Marker only; real vault existence is checked via IndexedDB in-app.
-    });
+  test(`unlock screen: no horizontal overflow @ ${vp.name}`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto("/unlock");
     // Either the unlock form or a redirect to onboarding is acceptable here;
