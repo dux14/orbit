@@ -2,8 +2,9 @@
  * OrbitLogo — the Orbit brand mark (Aurora direction).
  *
  * Motif: concentric orbital rings drawn with a periwinkle→rose aurora gradient,
- * pastel planet-dots with soft halos, transparent background. The raster icons
- * (public/icons/*) are generated separately from the Higgsfield source art.
+ * pastel planet-dots with soft halos, on a plum backdrop disc that matches the
+ * favicon / PWA icons and keeps the mark legible on the light theme. The raster
+ * icons (public/icons/*) are generated separately from the Higgsfield source art.
  *
  * Props:
  *   size      — pixel dimension of the square viewport (default 32)
@@ -32,6 +33,7 @@ export function OrbitLogo({ size = 32, className, ...rest }: OrbitLogoProps) {
   const uid = useId().replace(/:/g, "");
   const gradId = `orbitAurora-${uid}`;
   const haloId = `orbitHalo-${uid}`;
+  const bgId = `orbitPlum-${uid}`;
 
   return (
     <svg
@@ -50,10 +52,17 @@ export function OrbitLogo({ size = 32, className, ...rest }: OrbitLogoProps) {
           <stop offset="55%" stopColor="#c9a0ff" />
           <stop offset="100%" stopColor="#ff9ecb" />
         </linearGradient>
+        <radialGradient id={bgId} cx="50%" cy="42%" r="75%">
+          <stop offset="0%" stopColor="#241c40" />
+          <stop offset="100%" stopColor="#15102a" />
+        </radialGradient>
         <filter id={haloId} x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="1.6" />
         </filter>
       </defs>
+
+      {/* ── Plum backdrop disc (matches favicon / PWA icon ground) ──── */}
+      <circle cx="50" cy="50" r="50" fill={`url(#${bgId})`} />
 
       {/* ── Orbital rings (aurora gradient stroke) ──────────────────── */}
       {RING_RADII.map((r, i) => (

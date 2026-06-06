@@ -4,7 +4,7 @@ test("manifest serves plum theme_color and valid icons", async ({ request }) => 
   const res = await request.get("/manifest.json");
   expect(res.ok()).toBeTruthy();
   const manifest = await res.json();
-  expect(manifest.theme_color).toBe("#1a1530");
+  expect(manifest.theme_color).toBe("#090b17");
   expect(manifest.background_color).toBe("#f8f6fe");
   const purposes = manifest.icons.map((i: { src: string }) => i.src);
   expect(purposes).toContain("/icons/icon-192.png");
