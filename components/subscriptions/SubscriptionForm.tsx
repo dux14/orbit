@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/use-t";
 import type { DictKey } from "@/lib/i18n/dict";
+import { Collapsible } from "@base-ui/react/collapsible";
+import { ChevronDownIcon } from "lucide-react";
+import { PaymentMethodPicker, type NewCardDraft } from "./PaymentMethodPicker";
 
 /** ─── Types ─────────────────────────────────────────────────────────── */
 interface SubscriptionFormProps {
@@ -57,6 +60,31 @@ function ErrorMsg({ id, msg }: { id?: string; msg?: string }) {
   );
 }
 
+function AccordionSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Collapsible.Root defaultOpen={false} className="rounded-xl border border-border">
+      <Collapsible.Trigger
+        className="group flex min-h-[44px] w-full items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 rounded-xl"
+      >
+        {title}
+        <ChevronDownIcon
+          aria-hidden="true"
+          className="size-4 text-muted-foreground transition-transform duration-200 group-data-[panel-open]:rotate-180"
+        />
+      </Collapsible.Trigger>
+      <Collapsible.Panel className="overflow-hidden">
+        <div className="flex flex-col gap-4 px-3.5 pb-3.5 pt-1">{children}</div>
+      </Collapsible.Panel>
+    </Collapsible.Root>
+  );
+}
+
 /** ─── SubscriptionForm ──────────────────────────────────────────────── */
 export function SubscriptionForm({
   onSubmit,
@@ -83,6 +111,9 @@ export function SubscriptionForm({
   // Optional credential fields
   const [credEmail, setCredEmail] = React.useState("");
   const [credPassword, setCredPassword] = React.useState("");
+
+  // New card drafted inline via PaymentMethodPicker (null = none)
+  const [newCard, setNewCard] = React.useState<NewCardDraft | null>(null);
 
   // Validation
   const [errors, setErrors] = React.useState<FormErrors>({});
@@ -124,9 +155,12 @@ export function SubscriptionForm({
       credentialId: initial?.credentialId,
       createdAt: initial?.createdAt ?? now,
       updatedAt: now,
-      // Attach ephemeral credential data for the page to process
+      // Attach ephemeral data for the page to process
       ...(credEmail || credPassword
         ? { _credEmail: credEmail, _credPassword: credPassword } as unknown as object
+        : {}),
+      ...(newCard && newCard.label.trim() && /^\d{4}$/.test(newCard.last4)
+        ? { _newPaymentMethod: newCard } as unknown as object
         : {}),
     };
 
@@ -140,7 +174,7 @@ export function SubscriptionForm({
       className="flex flex-col gap-4 p-1"
       aria-label={t('subform.ariaLabel')}
     >
-      {/* ── Core info ─────────────────────────────────── */}
+      {/* ── Essential block (always visible) ──────────── */}
       <FieldGroup>
         <Label htmlFor="sub-serviceName">
           {t('subform.serviceName')} <span aria-hidden>*</span>
@@ -249,109 +283,53 @@ export function SubscriptionForm({
         <ErrorMsg id="sub-nextRenewal-err" msg={errors.nextRenewalDate} />
       </FieldGroup>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* ── Payment method picker ─────────────────────── */}
+      <PaymentMethodPicker
+        paymentMethods={paymentMethods}
+        value={paymentMethodId}
+        onChange={setPaymentMethodId}
+        onNewCardChange={setNewCard}
+      />
+
+      {/* ── Account & plan ────────────────────────────── */}
+      <AccordionSection title={t('subform.sectionAccountPlan')}>
         <FieldGroup>
-          <Label htmlFor="sub-status">{t('subform.status')}</Label>
-          <select
-            id="sub-status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            {STATUS_VALUES.map((value) => (
-              <option key={value} value={value}>
-                {t(STATUS_KEYS[value])}
-              </option>
-            ))}
-          </select>
+          <Label htmlFor="sub-accountEmail">{t('subform.accountEmail')}</Label>
+          <Input
+            id="sub-accountEmail"
+            type="email"
+            placeholder="you@example.com"
+            value={accountEmail}
+            onChange={(e) => setAccountEmail(e.target.value)}
+            autoComplete="email"
+          />
         </FieldGroup>
 
         <FieldGroup>
-          <Label htmlFor="sub-category">{t('subform.category')}</Label>
-          <select
-            id="sub-category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <option value="">{t('subform.categorySelect')}</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <Label htmlFor="sub-plan">{t('subform.plan')}</Label>
+          <Input
+            id="sub-plan"
+            type="text"
+            placeholder={t('subform.planPlaceholder')}
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+          />
         </FieldGroup>
-      </div>
 
-      <FieldGroup>
-        <Label htmlFor="sub-accountEmail">{t('subform.accountEmail')}</Label>
-        <Input
-          id="sub-accountEmail"
-          type="email"
-          placeholder="you@example.com"
-          value={accountEmail}
-          onChange={(e) => setAccountEmail(e.target.value)}
-          autoComplete="email"
-        />
-      </FieldGroup>
-
-      <FieldGroup>
-        <Label htmlFor="sub-plan">{t('subform.plan')}</Label>
-        <Input
-          id="sub-plan"
-          type="text"
-          placeholder={t('subform.planPlaceholder')}
-          value={plan}
-          onChange={(e) => setPlan(e.target.value)}
-        />
-      </FieldGroup>
-
-      {paymentMethods.length > 0 && (
         <FieldGroup>
-          <Label htmlFor="sub-pm">{t('subform.paymentMethod')}</Label>
-          <select
-            id="sub-pm"
-            value={paymentMethodId}
-            onChange={(e) => setPaymentMethodId(e.target.value)}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
-          >
-            <option value="">{t('subform.paymentMethodNone')}</option>
-            {paymentMethods.map((pm) => (
-              <option key={pm.id} value={pm.id}>
-                {pm.label} ({pm.brand} ····{pm.last4})
-              </option>
-            ))}
-          </select>
+          <Label htmlFor="sub-url">{t('subform.url')}</Label>
+          <Input
+            id="sub-url"
+            type="url"
+            placeholder="https://example.com"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
         </FieldGroup>
-      )}
+      </AccordionSection>
 
-      <FieldGroup>
-        <Label htmlFor="sub-url">{t('subform.url')}</Label>
-        <Input
-          id="sub-url"
-          type="url"
-          placeholder="https://example.com"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
-      </FieldGroup>
-
-      <FieldGroup>
-        <Label htmlFor="sub-notes">{t('subform.notes')}</Label>
-        <textarea
-          id="sub-notes"
-          rows={2}
-          placeholder={t('subform.notesPlaceholder')}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 resize-none placeholder:text-muted-foreground"
-        />
-      </FieldGroup>
-
-      {/* ── Credential section ─────────────────────────── */}
-      <fieldset className="rounded-lg border border-dashed border-border p-3 flex flex-col gap-3">
-        <legend className="px-1 text-xs font-medium text-muted-foreground">
-          {t('subform.credLegend')}
-        </legend>
+      {/* ── Credentials ───────────────────────────────── */}
+      <AccordionSection title={t('subform.sectionCredentials')}>
         <FieldGroup>
           <Label htmlFor="sub-cred-email">{t('subform.credEmail')}</Label>
           <Input
@@ -374,7 +352,55 @@ export function SubscriptionForm({
             autoComplete="new-password"
           />
         </FieldGroup>
-      </fieldset>
+      </AccordionSection>
+
+      {/* ── Notes & status ────────────────────────────── */}
+      <AccordionSection title={t('subform.sectionNotesStatus')}>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldGroup>
+            <Label htmlFor="sub-status">{t('subform.status')}</Label>
+            <select
+              id="sub-status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              {STATUS_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {t(STATUS_KEYS[value])}
+                </option>
+              ))}
+            </select>
+          </FieldGroup>
+
+          <FieldGroup>
+            <Label htmlFor="sub-category">{t('subform.category')}</Label>
+            <select
+              id="sub-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              <option value="">{t('subform.categorySelect')}</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </FieldGroup>
+        </div>
+
+        <FieldGroup>
+          <Label htmlFor="sub-notes">{t('subform.notes')}</Label>
+          <textarea
+            id="sub-notes"
+            rows={2}
+            placeholder={t('subform.notesPlaceholder')}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 resize-none placeholder:text-muted-foreground"
+          />
+        </FieldGroup>
+      </AccordionSection>
 
       {/* ── Actions ────────────────────────────────────── */}
       <div className="flex gap-2 justify-end pt-1">
