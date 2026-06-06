@@ -1,4 +1,5 @@
 import { AppShell } from '@/components/nav/AppShell';
+import { SyncLifecycle } from '@/components/sync/sync-lifecycle';
 import { VaultGuard } from './vault-guard';
 
 export default function VaultLayout({
@@ -8,6 +9,7 @@ export default function VaultLayout({
 }) {
   return (
     <VaultGuard>
+      <SyncLifecycle />
       <AppShell>{children}</AppShell>
     </VaultGuard>
   );

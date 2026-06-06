@@ -1,5 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { vaultService } from '@/lib/services/vault-service';
+import { repository } from '@/lib/db/repository';
+import { maybeSchedulePush, maybeReconcileNow } from '@/lib/sync/sync-trigger';
 import type { VaultData, Subscription, PaymentMethod, Credential } from '@/lib/types';
 
 function uid(): string {
@@ -23,7 +25,11 @@ export interface VaultState {
 
 async function persist(get: () => VaultState) {
   const { key, data } = get();
-  if (key && data) await vaultService.persist(key, data);
+  if (key && data) {
+    await vaultService.persist(key, data);
+    await repository.saveSyncState({ version: (await repository.getSyncState())?.version ?? 0, updatedAt: new Date().toISOString() });
+    maybeSchedulePush();
+  }
 }
 
 export const vaultStore = createStore<VaultState>((set, get) => ({
@@ -38,6 +44,7 @@ export const vaultStore = createStore<VaultState>((set, get) => ({
   async unlock(password) {
     const { key, data } = await vaultService.unlock(password);
     set({ key, data, locked: false });
+    maybeReconcileNow();
   },
   lock() {
     set({ key: null, data: null, locked: true });
