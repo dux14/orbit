@@ -32,8 +32,9 @@ describe('ConflictDialog', () => {
   it('shows both device labels when a conflict is present', () => {
     syncStore.getState().setConflict(conflict);
     render(<ConflictDialog />);
-    expect(screen.getByText(/this device|este dispositivo/i)).toBeTruthy();
-    expect(screen.getByText(/the other device|el otro dispositivo/i)).toBeTruthy();
+    // Regex anclados: "Keep this device" (botón) no debe matchear la etiqueta del panel.
+    expect(screen.getByText(/^(this device|este dispositivo)$/i)).toBeTruthy();
+    expect(screen.getByText(/^(the other device|el otro dispositivo)$/i)).toBeTruthy();
   });
 
   it('keep-local calls resolveConflictKeepLocal with the remote', async () => {
