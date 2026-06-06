@@ -81,9 +81,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-background px-4 py-12">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 pt-[max(2rem,env(safe-area-inset-top))] pb-[max(3.5rem,calc(env(safe-area-inset-bottom)+2.5rem))]">
       {/* Theme toggle — top-right */}
-      <div className="fixed top-4 right-4">
+      <div className="fixed right-4 top-[max(1rem,env(safe-area-inset-top))]">
         <ThemeToggle />
       </div>
 
