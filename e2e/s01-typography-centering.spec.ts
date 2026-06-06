@@ -1,5 +1,14 @@
 import { test, expect } from "@playwright/test";
 
+// This spec drives its own mobile viewports; running it again under the
+// desktop project would duplicate the exact same runs.
+test.beforeEach(({}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "mobile",
+    "spec sets its own mobile viewports; desktop project run would be a duplicate",
+  );
+});
+
 const VIEWPORTS = [
   { name: "iphone-se", width: 375, height: 667 },
   { name: "iphone-14", width: 390, height: 844 },
@@ -17,6 +26,10 @@ for (const vp of VIEWPORTS) {
     const fontFamily = await heading.evaluate(
       (el) => getComputedStyle(el).fontFamily,
     );
+    expect(
+      fontFamily.toLowerCase(),
+      "Heading resolved to a serif fallback — CSS likely failed to load. Check for a stale server on :3000 (reuseExistingServer) and rerun.",
+    ).not.toMatch(/times|serif/);
     expect(fontFamily.toLowerCase()).toContain("space grotesk");
 
     // Base font-size is 17.5px
