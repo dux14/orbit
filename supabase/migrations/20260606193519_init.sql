@@ -59,3 +59,8 @@ begin
   end if;
   return result;
 end $$;
+
+-- RLS verification (S2, 2026-06-06):
+-- user A cannot SELECT/UPDATE user B's vaults row → denied ✔
+-- upsert_vault runs as security invoker, RLS-respecting ✔
+-- anon key (no session) reads 0 rows on all three tables ✔
