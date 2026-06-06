@@ -11,9 +11,12 @@ export function ReminderPermission() {
   const t = useT();
   const [perm, setPerm] = React.useState<PermState>("unknown");
 
-  // Read current permission on mount (client only)
+  // Read current permission on mount (client only). The mount-effect setState is
+  // the standard SSR-safe pattern here: a lazy initializer would read
+  // Notification.permission during hydration and mismatch the server render.
   React.useEffect(() => {
     if (!isNotificationSupported()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPerm("denied"); // unsupported — treat same as denied for UI purposes
       return;
     }

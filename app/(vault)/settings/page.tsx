@@ -218,9 +218,18 @@ export default function SettingsPage() {
   const [leadDaysStr, setLeadDaysStr] = React.useState(String(reminderLeadDays));
   const [autoLockStr, setAutoLockStr] = React.useState(String(autoLockMinutes));
 
-  // Keep local string state in sync when store changes from outside
-  React.useEffect(() => { setLeadDaysStr(String(reminderLeadDays)); }, [reminderLeadDays]);
-  React.useEffect(() => { setAutoLockStr(String(autoLockMinutes)); }, [autoLockMinutes]);
+  // Keep local string state in sync when store changes from outside.
+  // Adjust-during-render pattern: avoids the effect→setState cascading re-render.
+  const [prevLeadDays, setPrevLeadDays] = React.useState(reminderLeadDays);
+  if (prevLeadDays !== reminderLeadDays) {
+    setPrevLeadDays(reminderLeadDays);
+    setLeadDaysStr(String(reminderLeadDays));
+  }
+  const [prevAutoLock, setPrevAutoLock] = React.useState(autoLockMinutes);
+  if (prevAutoLock !== autoLockMinutes) {
+    setPrevAutoLock(autoLockMinutes);
+    setAutoLockStr(String(autoLockMinutes));
+  }
 
   // ── Export state ──
   const [exporting, setExporting] = React.useState(false);
