@@ -194,6 +194,25 @@ const en = {
   'subform.cancel':               'Cancel',
   'subform.save':                 'Save',
 
+  // ── SubscriptionForm — accordions & card picker (S5) ───────────────────────
+  'subform.sectionAccountPlan':   'Account & plan',
+  'subform.sectionCredentials':   'Credentials',
+  'subform.sectionNotesStatus':   'Notes & status',
+  'subform.cardSectionLabel':     'Card',
+  'subform.cardNone':             'No card',
+  'subform.cardNew':              '+ New card',
+  'subform.cardNewLegend':        'New card',
+  'subform.cardSelectedAria':     'Selected card',
+  'subform.cardChooseAria':       'Choose a card for this subscription',
+  'subform.newCardLabel':         'Alias',
+  'subform.newCardLabelPlaceholder': 'e.g. Personal Visa',
+  'subform.newCardBrand':         'Brand',
+  'subform.newCardLast4':         'Last 4 digits',
+  'subform.newCardLast4Invalid':  'Must be exactly 4 digits',
+  'subform.newCardColor':         'Colour',
+  'subform.newCardColorAria':     'Pick a card colour',
+  'subform.newCardRemove':        'Discard new card',
+
   // ── SubscriptionDetail ────────────────────────────────────────────────────
   'detail.plan':                  'Plan',
   'detail.accountEmail':          'Account email',
@@ -438,6 +457,25 @@ const es = {
   'subform.credPassword':         'Contraseña',
   'subform.cancel':               'Cancelar',
   'subform.save':                 'Guardar',
+
+  // ── SubscriptionForm — acordeones y selector de tarjeta (S5) ───────────────
+  'subform.sectionAccountPlan':   'Cuenta y plan',
+  'subform.sectionCredentials':   'Credenciales',
+  'subform.sectionNotesStatus':   'Notas y estado',
+  'subform.cardSectionLabel':     'Tarjeta',
+  'subform.cardNone':             'Sin tarjeta',
+  'subform.cardNew':              '+ Nueva tarjeta',
+  'subform.cardNewLegend':        'Nueva tarjeta',
+  'subform.cardSelectedAria':     'Tarjeta seleccionada',
+  'subform.cardChooseAria':       'Elige una tarjeta para esta suscripción',
+  'subform.newCardLabel':         'Alias',
+  'subform.newCardLabelPlaceholder': 'ej. Visa personal',
+  'subform.newCardBrand':         'Marca',
+  'subform.newCardLast4':         'Últimos 4 dígitos',
+  'subform.newCardLast4Invalid':  'Deben ser exactamente 4 dígitos',
+  'subform.newCardColor':         'Color',
+  'subform.newCardColorAria':     'Elige un color de tarjeta',
+  'subform.newCardRemove':        'Descartar tarjeta nueva',
 
   // ── SubscriptionDetail ────────────────────────────────────────────────────
   'detail.plan':                  'Plan',
