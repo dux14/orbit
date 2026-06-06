@@ -16,7 +16,7 @@ interface VaultState {
   reset: () => void; // test helper
   upsertSubscription: (sub: Subscription) => Promise<void>;
   deleteSubscription: (id: string) => Promise<void>;
-  upsertPaymentMethod: (pm: PaymentMethod) => Promise<void>;
+  upsertPaymentMethod: (pm: PaymentMethod) => Promise<string>;
   deletePaymentMethod: (id: string) => Promise<void>;
   upsertCredential: (c: Credential) => Promise<string>;
 }
@@ -63,12 +63,14 @@ export const vaultStore = createStore<VaultState>((set, get) => ({
   },
   async upsertPaymentMethod(pm) {
     const data = get().data!;
+    const id = pm.id || uid();
     const exists = pm.id && data.paymentMethods.some((p) => p.id === pm.id);
     const next = exists
-      ? data.paymentMethods.map((p) => (p.id === pm.id ? pm : p))
-      : [...data.paymentMethods, { ...pm, id: uid() }];
+      ? data.paymentMethods.map((p) => (p.id === pm.id ? { ...pm, id } : p))
+      : [...data.paymentMethods, { ...pm, id }];
     set({ data: { ...data, paymentMethods: next } });
     await persist(get);
+    return id;
   },
   async deletePaymentMethod(id) {
     const data = get().data!;

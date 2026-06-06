@@ -40,4 +40,25 @@ describe('vaultStore', () => {
     await vaultStore.getState().deleteSubscription(id);
     expect(vaultStore.getState().data?.subscriptions).toHaveLength(0);
   });
+  it('upsertPaymentMethod returns the generated id for new cards', async () => {
+    await vaultStore.getState().createVault('pw');
+    const id = await vaultStore.getState().upsertPaymentMethod({
+      id: '', label: 'Personal Visa', brand: 'Visa', last4: '4242', color: '#b8c8f0',
+    });
+    expect(id).toBeTruthy();
+    expect(vaultStore.getState().data?.paymentMethods).toHaveLength(1);
+    expect(vaultStore.getState().data?.paymentMethods[0].id).toBe(id);
+  });
+  it('upsertPaymentMethod returns the same id when editing', async () => {
+    await vaultStore.getState().createVault('pw');
+    const id = await vaultStore.getState().upsertPaymentMethod({
+      id: '', label: 'A', brand: 'Visa', last4: '1111', color: '#b8c8f0',
+    });
+    const again = await vaultStore.getState().upsertPaymentMethod({
+      id, label: 'A renamed', brand: 'Visa', last4: '1111', color: '#b8c8f0',
+    });
+    expect(again).toBe(id);
+    expect(vaultStore.getState().data?.paymentMethods).toHaveLength(1);
+    expect(vaultStore.getState().data?.paymentMethods[0].label).toBe('A renamed');
+  });
 });
