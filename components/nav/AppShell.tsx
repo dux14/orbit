@@ -32,6 +32,20 @@ export function AppShell({ children }: AppShellProps) {
       {/* Desktop sidebar — hidden on mobile */}
       <Sidebar />
 
+      {/* Mobile header — visible only on < md. Lives outside <main> so it gets
+          the implicit `banner` landmark (a <header> nested in sectioning content
+          does not). It is position:fixed — do NOT add transform/filter/isolation
+          to an ancestor or the fixed positioning silently breaks. */}
+      <header className="fixed md:hidden inset-x-0 top-0 z-30 flex items-center justify-between px-4 h-[var(--app-header-total)] pt-[var(--safe-top)] border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
+        <div className="flex items-center gap-2">
+          <OrbitLogo size={26} aria-hidden="true" />
+          <span className="font-heading text-lg leading-none tracking-tight">
+            Orbit
+          </span>
+        </div>
+        <ThemeToggle />
+      </header>
+
       {/* Main content — offset left on desktop for sidebar, pad bottom on mobile for tab bar */}
       <main
         id="main-content"
@@ -39,17 +53,6 @@ export function AppShell({ children }: AppShellProps) {
         aria-label="Main content"
         className="flex-1 min-w-0 md:ml-56 flex flex-col min-h-dvh pt-[var(--app-header-total)] md:pt-0 pb-[var(--app-tabbar-total)] md:pb-0 outline-none"
       >
-        {/* Mobile header — visible only on < md */}
-        <header className="fixed md:hidden inset-x-0 top-0 z-30 flex items-center justify-between px-4 h-[var(--app-header-total)] pt-[var(--safe-top)] border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
-          <div className="flex items-center gap-2">
-            <OrbitLogo size={26} aria-hidden="true" />
-            <span className="font-heading text-lg leading-none tracking-tight">
-              Orbit
-            </span>
-          </div>
-          <ThemeToggle />
-        </header>
-
         {/* Page content */}
         <div className="flex-1 p-4 md:p-6 lg:p-8">{children}</div>
       </main>
