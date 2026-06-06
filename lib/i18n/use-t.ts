@@ -21,7 +21,8 @@ export function useT(): (key: DictKey, params?: Record<string, string | number>)
     let str = DICT[locale]?.[key] ?? DICT['en'][key] ?? key;
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
+        // Function form so `$&`/`$'` etc. in values (e.g. user emails) are literal.
+        str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), () => String(v));
       }
     }
     return str;
