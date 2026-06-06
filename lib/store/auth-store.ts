@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { resetSyncService } from '@/lib/sync/sync-trigger';
 
 interface AuthState {
   user: User | null;
@@ -46,6 +47,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   signOut: async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // El singleton de sync queda ligado al userId saliente — descártalo.
+    resetSyncService();
     set({ session: null, user: null });
   },
 }));

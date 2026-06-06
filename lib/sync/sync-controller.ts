@@ -1,7 +1,7 @@
 // lib/sync/sync-controller.ts
 import { repository } from '@/lib/db/repository';
 import { vaultStore } from '@/lib/store/vault-store';
-import { decrypt } from '@/lib/crypto/vault';
+import { decrypt, checkVerifier } from '@/lib/crypto/vault';
 import { SyncRepository } from './sync-repository';
 import { SyncService, type LocalSnapshot } from './sync-service';
 import type { RemoteVault, VaultMeta } from './types';
@@ -37,11 +37,18 @@ async function readLocal(): Promise<LocalSnapshot> {
 /**
  * Aplica el blob remoto: descifra con la CryptoKey en memoria y re-hidrata el vault store.
  * El descifrado ocurre SOLO aquí (cliente). SyncRepository jamás ve la clave.
+ * Exportada para poder testear la defensa del verifier (meta-swap) con crypto real.
  */
-async function applyRemote(remote: RemoteVault): Promise<void> {
+export async function applyRemote(remote: RemoteVault): Promise<void> {
   const key = vaultStore.getState().key;
   if (!key) throw new Error('applyRemote: vault is locked, cannot decrypt remote blob');
   const meta = JSON.parse(remote.encryptedMeta) as VaultMeta;
+  // Defensa meta/KDF swap: solo se acepta un meta cuyo verifier descifra con la
+  // clave viva. Un meta envenenado (KDF degradado + verifier ajeno) en la fila
+  // remota debilitaría el cifrado local en el próximo unlock — DB no es confiable.
+  if (!(await checkVerifier(key, meta.verifier))) {
+    throw new Error('applyRemote: remote meta verifier does not match current key — rejecting');
+  }
   const data = JSON.parse(await decrypt(key, remote.encryptedBlob)) as VaultData;
   // Memoria primero, Dexie después — mismo orden que vault-store (set → persist).
   vaultStore.setState({ data });

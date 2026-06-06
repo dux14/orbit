@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useT } from '@/lib/i18n/use-t';
+import { useSettingsStore } from '@/lib/store/settings-store';
 import { useSyncStore } from '@/lib/store/sync-store';
 import { getSyncService } from '@/lib/sync/sync-trigger';
 import type { RemoteVault } from '@/lib/sync/types';
@@ -19,6 +20,7 @@ function fmt(iso: string, locale: string): string {
 
 export function ConflictDialog() {
   const t = useT();
+  const locale = useSettingsStore((s) => s.settings.locale);
   const conflict = useSyncStore((s) => s.conflict);
   const [resolving, setResolving] = useState(false);
 
@@ -47,11 +49,11 @@ export function ConflictDialog() {
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg ring-1 ring-foreground/10 p-3">
             <p className="font-heading text-sm font-medium">{t('sync.conflictThisDevice')}</p>
-            <p className="text-xs text-muted-foreground">{t('sync.conflictEditedAt', { time: fmt(conflict.localUpdatedAt, 'default') })}</p>
+            <p className="text-xs text-muted-foreground">{t('sync.conflictEditedAt', { time: fmt(conflict.localUpdatedAt, locale) })}</p>
           </div>
           <div className="rounded-lg ring-1 ring-foreground/10 p-3">
             <p className="font-heading text-sm font-medium">{t('sync.conflictOtherDevice')}</p>
-            <p className="text-xs text-muted-foreground">{t('sync.conflictEditedAt', { time: fmt(conflict.remoteUpdatedAt, 'default') })}</p>
+            <p className="text-xs text-muted-foreground">{t('sync.conflictEditedAt', { time: fmt(conflict.remoteUpdatedAt, locale) })}</p>
           </div>
         </div>
 

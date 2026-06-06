@@ -41,6 +41,8 @@ export const vaultStore = createStore<VaultState>((set, get) => ({
   async createVault(password) {
     const { key, data } = await vaultService.create(password);
     set({ key, data, locked: false });
+    // Backup inicial: sin esto, un vault recién creado no sube hasta la primera edición.
+    maybeSchedulePush();
   },
   async unlock(password) {
     const { key, data } = await vaultService.unlock(password);

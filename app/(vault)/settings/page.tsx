@@ -34,6 +34,7 @@ import {
 import { settingsStore, useSettingsStore } from '@/lib/store/settings-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { SyncStatus } from '@/components/sync/sync-status';
+import { resetSyncService } from '@/lib/sync/sync-trigger';
 import { vaultStore } from '@/lib/store/vault-store';
 import { repository } from '@/lib/db/repository';
 import {
@@ -344,6 +345,9 @@ export default function SettingsPage() {
     setWiping(true);
     try {
       await repository.wipeVault();
+      // Descarta el SyncService (y su timer): un reconcile posterior re-bajaría
+      // el vault remoto sobre el dispositivo recién borrado.
+      resetSyncService();
       vaultStore.getState().lock();
       router.replace('/onboarding');
     } finally {
