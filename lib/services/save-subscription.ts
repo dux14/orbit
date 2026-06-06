@@ -1,4 +1,5 @@
-import type { Subscription, Credential, PaymentMethod } from "@/lib/types";
+import type { Subscription } from "@/lib/types";
+import type { VaultState } from "@/lib/store/vault-store";
 
 export interface DraftCard {
   label: string;
@@ -7,12 +8,12 @@ export interface DraftCard {
   color: string;
 }
 
-/** Minimal slice of the vault store this helper needs (keeps it unit-testable). */
-export interface VaultActions {
-  upsertCredential: (c: Credential) => Promise<string>;
-  upsertPaymentMethod: (pm: PaymentMethod) => Promise<string>;
-  upsertSubscription: (sub: Subscription) => Promise<void>;
-}
+/** Minimal slice of the vault store this helper needs (keeps it unit-testable).
+ *  Derived from VaultState so a store signature change breaks here, not silently. */
+export type VaultActions = Pick<
+  VaultState,
+  "upsertCredential" | "upsertPaymentMethod" | "upsertSubscription"
+>;
 
 interface DraftCreds {
   email?: string;

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/use-t";
 import { BRANDS } from "@/components/payment/PaymentMethodForm";
+import type { DraftCard } from "@/lib/services/save-subscription";
 
 /** Fixed palette of card swatches (no native colour input, per spec §3.4). */
 export const CARD_PALETTE = [
@@ -20,12 +21,8 @@ export const CARD_PALETTE = [
   "#d8d8e0", // slate
 ] as const;
 
-export interface NewCardDraft {
-  label: string;
-  brand: string;
-  last4: string;
-  color: string;
-}
+/** Same shape the save service persists — single source of truth. */
+export type NewCardDraft = DraftCard;
 
 const EMPTY_DRAFT: NewCardDraft = {
   label: "",

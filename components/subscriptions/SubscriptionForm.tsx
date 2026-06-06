@@ -24,6 +24,7 @@ interface FormErrors {
   serviceName?: string;
   amount?: string;
   nextRenewalDate?: string;
+  newCard?: string;
 }
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "MXN", "BRL", "COP"];
@@ -123,6 +124,10 @@ export function SubscriptionForm({
     if (!serviceName.trim()) errs.serviceName = t('subform.serviceNameRequired');
     if (!amount.trim() || isNaN(Number(amount))) errs.amount = t('subform.amountRequired');
     if (!nextRenewalDate) errs.nextRenewalDate = t('subform.nextRenewalRequired');
+    // An open but incomplete new-card draft would be silently dropped — block instead.
+    if (newCard && !(newCard.label.trim() && /^\d{4}$/.test(newCard.last4))) {
+      errs.newCard = t('subform.newCardIncomplete');
+    }
     return errs;
   }
 
@@ -290,6 +295,7 @@ export function SubscriptionForm({
         onChange={setPaymentMethodId}
         onNewCardChange={setNewCard}
       />
+      <ErrorMsg id="sub-newcard-err" msg={errors.newCard} />
 
       {/* ── Account & plan ────────────────────────────── */}
       <AccordionSection title={t('subform.sectionAccountPlan')}>

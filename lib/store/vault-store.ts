@@ -6,7 +6,7 @@ function uid(): string {
   return (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)) as string;
 }
 
-interface VaultState {
+export interface VaultState {
   locked: boolean;
   key: CryptoKey | null;
   data: VaultData | null;

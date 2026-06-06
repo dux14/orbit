@@ -15,13 +15,13 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { useT } from "@/lib/i18n/use-t";
-import { saveSubscriptionWithDraftCard } from "@/lib/services/save-subscription";
+import { saveSubscriptionWithDraftCard, type DraftCard } from "@/lib/services/save-subscription";
 
 /** Ephemeral fields attached by SubscriptionForm */
 type SubWithCreds = Subscription & {
   _credEmail?: string;
   _credPassword?: string;
-  _newPaymentMethod?: { label: string; brand: string; last4: string; color: string };
+  _newPaymentMethod?: DraftCard;
 };
 
 export default function SubscriptionsPage() {
@@ -73,12 +73,18 @@ export default function SubscriptionsPage() {
     delete (clean as SubWithCreds)._credPassword;
     delete (clean as SubWithCreds)._newPaymentMethod;
 
-    await saveSubscriptionWithDraftCard(
-      { upsertCredential, upsertPaymentMethod, upsertSubscription },
-      clean,
-      { email: credEmail, password: credPassword },
-      draftCard,
-    );
+    try {
+      await saveSubscriptionWithDraftCard(
+        { upsertCredential, upsertPaymentMethod, upsertSubscription },
+        clean,
+        { email: credEmail, password: credPassword },
+        draftCard,
+      );
+    } catch (err) {
+      // Keep the sheet open so the user's input is not lost on a failed save.
+      console.error("Failed to save subscription", err);
+      return;
+    }
 
     setFormOpen(false);
     setEditSub(undefined);
