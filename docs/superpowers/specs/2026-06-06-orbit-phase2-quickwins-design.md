@@ -33,6 +33,7 @@ Phase 3 (post-S12, specs propios en su momento): S13 TOTP · S14 auto-import CSV
 
 ### 3.1 Backend (parametriza phase-2-plan.md)
 - Decisiones §1 del plan: **(1) single-blob + versión** (per-record → Phase 2.5 condicional), **(2) reminder index opt-in default OFF**, **(3) prompt solo en conflicto real de versiones**, **(4) cuenta opcional** (local-first se preserva).
+- **Multi-dispositivo es requisito de primera clase**: la misma cuenta debe ver el mismo vault en móvil (PWA instalada iOS/Android), web y desktop — todos consumen el mismo code path de sync (no hay ramas por plataforma). S6 implementa el motor, S8 la vinculación de dispositivos, y S12 lo verifica E2E con dos contextos de navegador simultáneos (editar en "dispositivo A" → aparecer en "dispositivo B").
 - Proyecto Supabase: `vmcjkleuetcogqhdnlfx` (URL `https://vmcjkleuetcogqhdnlfx.supabase.co`).
 - Google OAuth: client ID `457451718899-gp6onihjafeao8ai9cd3m4pb3eppf450.apps.googleusercontent.com`; redirect ya registrado `https://vmcjkleuetcogqhdnlfx.supabase.co/auth/v1/callback`. Client secret y `sb_secret_*` viven solo en Supabase config/secrets y Vercel env — nunca en el repo.
 - Env: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publishable) en `.env.local` y Vercel (Prod+Preview). Feature flag `NEXT_PUBLIC_SYNC_ENABLED` gatea la UI de cuenta/sync hasta CP7.
@@ -86,3 +87,4 @@ Phase 3 (post-S12, specs propios en su momento): S13 TOTP · S14 auto-import CSV
 4. Lighthouse mobile ≥95 tras cada sesión UI.
 5. Secrets rotados tras S4; ninguno en repo ni en bundles.
 6. Cuotas: proyección dentro de free tier con margen documentado.
+7. **Paridad multi-dispositivo**: editar el vault en un dispositivo y desbloquearlo en otro (móvil/web/desktop) produce el mismo estado descifrado; verificado E2E en S12 con dos contextos simultáneos y manual en al menos un móvil real.
