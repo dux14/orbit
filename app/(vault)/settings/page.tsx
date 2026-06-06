@@ -32,6 +32,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { settingsStore, useSettingsStore } from '@/lib/store/settings-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { vaultStore } from '@/lib/store/vault-store';
 import { repository } from '@/lib/db/repository';
 import {
@@ -141,6 +142,64 @@ function ThemeSegment({
       <Icon aria-hidden className="size-4 shrink-0" />
       <span>{label}</span>
     </button>
+  );
+}
+
+// ─── Account section (optional sync — flag-gated) ───────────────────────────────
+const SYNC_ENABLED = process.env.NEXT_PUBLIC_SYNC_ENABLED === 'true';
+
+function AccountSection() {
+  const t = useT();
+  const user = useAuthStore((s) => s.user);
+  const initialized = useAuthStore((s) => s.initialized);
+  const init = useAuthStore((s) => s.init);
+  const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
+  const signOut = useAuthStore((s) => s.signOut);
+
+  React.useEffect(() => {
+    const unsub = init();
+    return unsub;
+  }, [init]);
+
+  return (
+    <section
+      className="rounded-2xl border border-border bg-card px-5 py-5 flex flex-col gap-5"
+      aria-labelledby="account-heading"
+    >
+      <h2 id="account-heading" className="font-heading text-base leading-tight text-foreground">
+        {t('settings.account')}
+      </h2>
+      {/* Avoid a flash before the session is hydrated. */}
+      {initialized && (
+        user ? (
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-foreground">
+              {t('settings.signedInAs', { email: user.email ?? '' })}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              className="self-start gap-2 h-10"
+              onClick={() => void signOut()}
+            >
+              {t('settings.signOut')}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <span className="text-xs text-muted-foreground">{t('settings.syncDisabledHint')}</span>
+            <Button
+              type="button"
+              variant="outline"
+              className="self-start gap-2 h-10"
+              onClick={() => void signInWithGoogle()}
+            >
+              {t('settings.signInGoogle')}
+            </Button>
+          </div>
+        )
+      )}
+    </section>
   );
 }
 
@@ -448,6 +507,9 @@ export default function SettingsPage() {
             )}
           </div>
         </Section>
+
+        {/* ── Account (optional sync — flag-gated) ──────────────────────── */}
+        {SYNC_ENABLED && <AccountSection />}
 
         {/* ── Danger zone ──────────────────────────────────────────────── */}
         <Section title={t('settings.danger')} danger>

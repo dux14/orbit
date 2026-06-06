@@ -90,6 +90,12 @@ const en = {
   'settings.wipeWiping':          'Wiping…',
   'settings.wipeCancel':          'Cancel',
 
+  'settings.account':             'Account',
+  'settings.signInGoogle':        'Continue with Google',
+  'settings.signOut':             'Sign out',
+  'settings.signedInAs':          'Signed in as {email}',
+  'settings.syncDisabledHint':    'Sign in to sync your vault across devices (optional).',
+
   // ── Dashboard ─────────────────────────────────────────────────────────────
   'dashboard.title':              'Dashboard',
   'dashboard.add':                'Add',
@@ -328,6 +334,12 @@ const es = {
   'settings.wipeConfirm':         'Sí, borrar todo',
   'settings.wipeWiping':          'Borrando…',
   'settings.wipeCancel':          'Cancelar',
+
+  'settings.account':             'Cuenta',
+  'settings.signInGoogle':        'Continuar con Google',
+  'settings.signOut':             'Cerrar sesión',
+  'settings.signedInAs':          'Sesión iniciada como {email}',
+  'settings.syncDisabledHint':    'Inicia sesión para sincronizar tu bóveda entre dispositivos (opcional).',
 
   // ── Dashboard ─────────────────────────────────────────────────────────────
   'dashboard.title':              'Panel',
