@@ -268,6 +268,23 @@ const en = {
   'pmform.cancel':                'Cancel',
   'pmform.save':                  'Save changes',
   'pmform.addCard':               'Add card',
+
+  // ── Sync / Conflict ───────────────────────────────────────────────────────────────
+  'sync.statusIdle':            'Synced',
+  'sync.statusSyncing':         'Syncing…',
+  'sync.statusError':           'Sync error — will retry',
+  'sync.statusConflict':        'Sync conflict — action needed',
+  'sync.lastSynced':            'Last synced {time}',
+  'sync.never':                 'Not synced yet',
+  'sync.conflictTitle':         'This vault changed on another device',
+  'sync.conflictBody':          'Your vault was edited on more than one device. Choose which version to keep — the other will be replaced.',
+  'sync.conflictThisDevice':    'This device',
+  'sync.conflictOtherDevice':   'The other device',
+  'sync.conflictEditedAt':      'Edited {time}',
+  'sync.conflictKeepLocal':     'Keep this device',
+  'sync.conflictUseRemote':     'Use the other device',
+  'sync.conflictCancel':        'Decide later',
+  'sync.conflictResolving':     'Resolving…',
 } as const;
 
 const es = {
@@ -532,6 +549,23 @@ const es = {
   'pmform.cancel':                'Cancelar',
   'pmform.save':                  'Guardar cambios',
   'pmform.addCard':               'Agregar tarjeta',
+
+  // ── Sync / Conflict ───────────────────────────────────────────────────────────────
+  'sync.statusIdle':            'Sincronizado',
+  'sync.statusSyncing':         'Sincronizando…',
+  'sync.statusError':           'Error de sincronización — se reintentará',
+  'sync.statusConflict':        'Conflicto de sincronización — requiere acción',
+  'sync.lastSynced':            'Última sincronización {time}',
+  'sync.never':                 'Aún sin sincronizar',
+  'sync.conflictTitle':         'Este vault cambió en otro dispositivo',
+  'sync.conflictBody':          'Tu vault se editó en más de un dispositivo. Elige qué versión conservar — la otra será reemplazada.',
+  'sync.conflictThisDevice':    'Este dispositivo',
+  'sync.conflictOtherDevice':   'El otro dispositivo',
+  'sync.conflictEditedAt':      'Editado {time}',
+  'sync.conflictKeepLocal':     'Conservar este dispositivo',
+  'sync.conflictUseRemote':     'Usar el otro dispositivo',
+  'sync.conflictCancel':        'Decidir más tarde',
+  'sync.conflictResolving':     'Resolviendo…',
 } as const;
 
 export type DictKey = keyof typeof en;
