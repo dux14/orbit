@@ -46,7 +46,7 @@ export const repository = {
     await db.sync.put({ key: SYNC_KEY, value: ref });
   },
   async wipeVault(): Promise<void> {
-    await db.transaction('rw', db.meta, db.blob, db.settings, db.fx, db.sync, async () => {
+    await db.transaction('rw', [db.meta, db.blob, db.settings, db.fx, db.sync], async () => {
       await Promise.all([db.meta.clear(), db.blob.clear(), db.settings.clear(), db.fx.clear(), db.sync.clear()]);
     });
   },
