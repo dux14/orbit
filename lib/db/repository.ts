@@ -45,6 +45,14 @@ export const repository = {
   async saveSyncState(ref: LocalVaultRef): Promise<void> {
     await db.sync.put({ key: SYNC_KEY, value: ref });
   },
+  /** Marca una mutación local: actualiza solo updatedAt preservando la versión.
+   *  Transacción atómica — evita la carrera read-modify-write sobre version. */
+  async touchSyncState(updatedAt: string): Promise<void> {
+    await db.transaction('rw', db.sync, async () => {
+      const cur = (await db.sync.get(SYNC_KEY))?.value;
+      await db.sync.put({ key: SYNC_KEY, value: { version: cur?.version ?? 0, updatedAt } });
+    });
+  },
   async wipeVault(): Promise<void> {
     await db.transaction('rw', [db.meta, db.blob, db.settings, db.fx, db.sync], async () => {
       await Promise.all([db.meta.clear(), db.blob.clear(), db.settings.clear(), db.fx.clear(), db.sync.clear()]);

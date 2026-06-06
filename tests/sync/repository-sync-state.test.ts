@@ -26,3 +26,21 @@ describe('repository sync state', () => {
     expect((await repository.getSyncState())?.version).toBe(2);
   });
 });
+
+describe('repository.touchSyncState', () => {
+  beforeEach(async () => {
+    await db.delete();
+    await db.open();
+  });
+
+  it('updates only updatedAt, preserving the stored version', async () => {
+    await repository.saveSyncState({ version: 3, updatedAt: '2026-06-06T09:00:00.000Z' });
+    await repository.touchSyncState('2026-06-06T10:00:00.000Z');
+    expect(await repository.getSyncState()).toEqual({ version: 3, updatedAt: '2026-06-06T10:00:00.000Z' });
+  });
+
+  it('defaults version to 0 when no prior state exists', async () => {
+    await repository.touchSyncState('2026-06-06T10:00:00.000Z');
+    expect(await repository.getSyncState()).toEqual({ version: 0, updatedAt: '2026-06-06T10:00:00.000Z' });
+  });
+});

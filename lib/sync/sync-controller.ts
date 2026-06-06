@@ -43,8 +43,22 @@ async function applyRemote(remote: RemoteVault): Promise<void> {
   if (!key) throw new Error('applyRemote: vault is locked, cannot decrypt remote blob');
   const meta = JSON.parse(remote.encryptedMeta) as VaultMeta;
   const data = JSON.parse(await decrypt(key, remote.encryptedBlob)) as VaultData;
-  await repository.createVault(meta, remote.encryptedBlob);
+  // Memoria primero, Dexie después — mismo orden que vault-store (set → persist).
   vaultStore.setState({ data });
+  await repository.createVault(meta, remote.encryptedBlob);
+}
+
+/**
+ * Acepta una base de sync conservando el updatedAt local si es MAYOR que el del
+ * servidor: una mutación local ocurrida mientras el push estaba en vuelo dejaría
+ * de subir si su timestamp fuera pisado (reconcile la vería como ya sincronizada).
+ * Conservarlo provoca, a lo sumo, un push extra inofensivo.
+ */
+async function acceptSyncBase(ref: { version: number; updatedAt: string }): Promise<void> {
+  const cur = await repository.getSyncState();
+  const updatedAt =
+    cur && Date.parse(cur.updatedAt) > Date.parse(ref.updatedAt) ? cur.updatedAt : ref.updatedAt;
+  await repository.saveSyncState({ version: ref.version, updatedAt });
 }
 
 export async function createSyncService(): Promise<SyncService | null> {
@@ -52,5 +66,5 @@ export async function createSyncService(): Promise<SyncService | null> {
   const session = await getSession();
   if (!session) return null;
   const repo = new SyncRepository(session.client, session.userId);
-  return new SyncService(repo, readLocal, applyRemote, (ref) => repository.saveSyncState(ref));
+  return new SyncService(repo, readLocal, applyRemote, acceptSyncBase);
 }

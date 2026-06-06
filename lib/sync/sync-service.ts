@@ -21,6 +21,7 @@ export const PUSH_DEBOUNCE_MS = 4000;
 
 export class SyncService {
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private running = false;
 
   constructor(
     private readonly repo: SyncRepository,
@@ -29,8 +30,12 @@ export class SyncService {
     private readonly saveSyncState: SaveSyncState,
   ) {}
 
-  /** Ciclo completo de reconciliación. Idempotente; seguro de llamar en cualquier momento. */
+  /** Ciclo completo de reconciliación. Idempotente; seguro de llamar en cualquier momento.
+   *  No reentrante: si ya hay un ciclo en vuelo (visibilitychange + online simultáneos),
+   *  la llamada extra es no-op — evita pushes dobles que fabrican falsos conflictos. */
   async reconcileNow(): Promise<void> {
+    if (this.running) return;
+    this.running = true;
     syncStore.getState().setStatus('syncing');
     try {
       const local = await this.readLocal();
@@ -78,6 +83,8 @@ export class SyncService {
         }
       }
       syncStore.getState().setStatus('error');
+    } finally {
+      this.running = false;
     }
   }
 
@@ -88,6 +95,15 @@ export class SyncService {
       this.timer = null;
       void this.reconcileNow();
     }, PUSH_DEBOUNCE_MS);
+  }
+
+  /** Cancela el push pendiente sin ejecutarlo (lock / sign-out): un timer huérfano
+   *  dispararía reconcile con el vault ya bloqueado y fabricaría un error espurio. */
+  cancelPendingPush(): void {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
   }
 
   /** Fuerza el flush inmediato del push pendiente (al lock / pagehide). */

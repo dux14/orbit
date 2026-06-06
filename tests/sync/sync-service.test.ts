@@ -111,3 +111,41 @@ describe('SyncService.reconcileNow', () => {
     expect(syncStore.getState().conflict).toBeNull();
   });
 });
+
+describe('SyncService concurrency & lifecycle', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    syncStore.getState().reset();
+  });
+
+  it('reconcileNow is a no-op while another reconcile is in flight', async () => {
+    const d = makeDeps({ remote: null });
+    let release!: () => void;
+    d.repo.pullVault.mockImplementationOnce(
+      () => new Promise((res) => { release = () => res(null); }),
+    );
+    const svc = new SyncService(d.repo as any, d.readLocal, d.applyRemote, d.saveSyncState);
+    const first = svc.reconcileNow();
+    const second = svc.reconcileNow(); // entra mientras el primero espera el pull
+    await second;
+    release();
+    await first;
+    expect(d.repo.pullVault).toHaveBeenCalledTimes(1);
+    expect(d.repo.pushVault).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancelPendingPush clears a scheduled debounce push', async () => {
+    vi.useFakeTimers();
+    try {
+      const d = makeDeps({ remote: null });
+      const svc = new SyncService(d.repo as any, d.readLocal, d.applyRemote, d.saveSyncState);
+      svc.schedulePush();
+      svc.cancelPendingPush();
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(d.repo.pullVault).not.toHaveBeenCalled();
+      expect(d.repo.pushVault).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

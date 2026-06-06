@@ -1,7 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { vaultService } from '@/lib/services/vault-service';
 import { repository } from '@/lib/db/repository';
-import { maybeSchedulePush, maybeReconcileNow } from '@/lib/sync/sync-trigger';
+import { maybeSchedulePush, maybeReconcileNow, maybeCancelPush } from '@/lib/sync/sync-trigger';
 import type { VaultData, Subscription, PaymentMethod, Credential } from '@/lib/types';
 
 function uid(): string {
@@ -27,7 +27,8 @@ async function persist(get: () => VaultState) {
   const { key, data } = get();
   if (key && data) {
     await vaultService.persist(key, data);
-    await repository.saveSyncState({ version: (await repository.getSyncState())?.version ?? 0, updatedAt: new Date().toISOString() });
+    // Solo marca el timestamp de la mutación: la versión la gobierna el SyncService.
+    await repository.touchSyncState(new Date().toISOString());
     maybeSchedulePush();
   }
 }
@@ -47,6 +48,8 @@ export const vaultStore = createStore<VaultState>((set, get) => ({
     maybeReconcileNow();
   },
   lock() {
+    // Cancela el push pendiente: un timer huérfano dispararía reconcile sin clave.
+    maybeCancelPush();
     set({ key: null, data: null, locked: true });
   },
   reset() {

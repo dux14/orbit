@@ -23,7 +23,15 @@ export function maybeReconcileNow(): void {
   void getSyncService().then((svc) => svc?.reconcileNow());
 }
 
-/** Resetea el singleton (sign-out / tests). */
+/** Cancela el push pendiente (lock): evita un timer huérfano sin clave en memoria. */
+export function maybeCancelPush(): void {
+  if (!isSyncEnabled()) return;
+  void getSyncService().then((svc) => svc?.cancelPendingPush());
+}
+
+/** Resetea el singleton (sign-out / tests). Cancela el timer de la instancia saliente. */
 export function resetSyncService(): void {
+  const stale = servicePromise;
   servicePromise = null;
+  void stale?.then((svc) => svc?.cancelPendingPush());
 }
