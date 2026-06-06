@@ -1,21 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Inter, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
-/** Display / heading font — characterful serif for Orbit's premium feel */
-const dmSerifDisplay = DM_Serif_Display({
-  weight: "400",
+/** Display / heading font — geometric grotesk for Orbit's premium feel */
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-dm-serif",
+  weight: ["500", "600", "700"],
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
-/** Body / UI font — clean humanist sans */
-const plusJakartaSans = Plus_Jakarta_Sans({
+/** Body / UI font — clean neutral sans */
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-plus-jakarta",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -69,7 +69,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${dmSerifDisplay.variable} ${plusJakartaSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         {/* No-flash theme script — must run before paint */}
