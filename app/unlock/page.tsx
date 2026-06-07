@@ -2,7 +2,7 @@
 
 import { useState, useId, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, Fingerprint, KeyRound } from 'lucide-react';
 import { OrbitLogo } from '@/components/orbit/OrbitLogo';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { vaultStore } from '@/lib/store/vault-store';
 import { vaultService } from '@/lib/services/vault-service';
 import { settingsStore } from '@/lib/store/settings-store';
 import { useT } from '@/lib/i18n/use-t';
+import { isBiometricEnrolled } from '@/lib/webauthn/enroll';
 import { cn } from '@/lib/utils';
 
 export default function UnlockPage() {
@@ -33,11 +34,34 @@ export default function UnlockPage() {
   const [showPw, setShowPw]     = useState(false);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioBusy, setBioBusy]   = useState(false);
+
+  // Biometric button only shows when a credential is enrolled on this device.
+  useEffect(() => {
+    let cancelled = false;
+    isBiometricEnrolled().then((on) => { if (!cancelled) setBioAvailable(on); });
+    return () => { cancelled = true; };
+  }, []);
 
   const pwId  = useId();
   const errId = useId();
 
   const canSubmit = password.length > 0 && !loading;
+
+  async function handleBio() {
+    setBioBusy(true);
+    setError('');
+    try {
+      await vaultStore.getState().unlockBio();
+      await settingsStore.getState().loadSettings();
+      router.replace('/dashboard');
+    } catch {
+      // Keep the password form visible as the always-available fallback.
+      setError(t('unlock.bioError'));
+      setBioBusy(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,6 +100,24 @@ export default function UnlockPage() {
             </p>
           </div>
         </div>
+
+        {/* ── Biometric unlock (only when enrolled; password is the fallback) ── */}
+        {bioAvailable && (
+          <div className="space-y-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11 gap-2"
+              onClick={handleBio}
+              disabled={bioBusy}
+              aria-busy={bioBusy}
+            >
+              <Fingerprint size={16} aria-hidden />
+              {bioBusy ? t('unlock.bioWorking') : t('unlock.bioButton')}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">{t('unlock.orPassword')}</p>
+          </div>
+        )}
 
         {/* ── Form ────────────────────────────────────────────────────── */}
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
