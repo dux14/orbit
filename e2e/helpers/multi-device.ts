@@ -147,7 +147,9 @@ export async function linkDeviceOn(page: Page) {
 export async function gotoSubscriptions(page: Page) {
   // Skip navigation when already there: clicking a Next.js link fires an RSC
   // fetch, which fails while the context is OFFLINE and triggers a hard reload
-  // (locking the vault — the key lives only in memory).
+  // (locking the vault — the key lives only in memory). NOTE: the guard is
+  // purely path-based — callers must not rely on this helper to force a fresh
+  // load or re-hydration of an already-open /subscriptions page.
   if (new URL(page.url()).pathname === '/subscriptions') return;
   await page.getByRole('link', { name: /^subscriptions$/i }).filter({ visible: true }).click();
   await page.waitForURL('**/subscriptions', { timeout: 10_000 });

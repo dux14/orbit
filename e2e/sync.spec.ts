@@ -44,23 +44,26 @@ test('sign-out clears the session and a fresh navigation lands on /unlock', asyn
   const session = await signUpTestUser(url, anonKey, `${testInfo.project.name}-so`);
 
   const ctx = await browser.newContext();
-  await injectSession(ctx, url, session);
-  const page = await ctx.newPage();
-  await createVaultOn(page);
+  try {
+    await injectSession(ctx, url, session);
+    const page = await ctx.newPage();
+    await createVaultOn(page);
 
-  // Signed-in state visible in Settings → sign out.
-  await gotoSettings(page);
-  await expect(page.getByText(/signed in as|sesión iniciada como/i)).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: /sign out|cerrar sesión/i }).click();
-  // Session cleared → the Account section offers Google sign-in again.
-  await expect(page.getByRole('button', { name: /google/i })).toBeVisible({ timeout: 15_000 });
+    // Signed-in state visible in Settings → sign out.
+    await gotoSettings(page);
+    await expect(page.getByText(/signed in as|sesión iniciada como/i)).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: /sign out|cerrar sesión/i }).click();
+    // Session cleared → the Account section offers Google sign-in again.
+    await expect(page.getByRole('button', { name: /google/i })).toBeVisible({ timeout: 15_000 });
 
-  // Full navigation drops the in-memory vault key → /unlock (locked).
-  await page.goto('/');
-  await page.waitForURL('**/unlock', { timeout: 15_000 });
-
-  await deleteRemoteVault(url, anonKey, session);
-  await ctx.close();
+    // Full navigation drops the in-memory vault key → /unlock (locked).
+    await page.goto('/');
+    await page.waitForURL('**/unlock', { timeout: 15_000 });
+  } finally {
+    // Teardown also on failure — no remote rows or contexts left behind.
+    await deleteRemoteVault(url, anonKey, session).catch(() => {});
+    await ctx.close();
+  }
 });
 
 test('cloud reminders toggle writes the index server-side, then deletes it', async ({ browser }, testInfo) => {
@@ -98,30 +101,33 @@ test('cloud reminders toggle writes the index server-side, then deletes it', asy
       return current;
     };
   });
-  await injectSession(ctx, url, session);
-  const page = await ctx.newPage();
-  await createVaultOn(page);
-  await addSubscriptionOn(page, SERVICE); // gives the index something to mirror
-  await flushPush(page);
-  await waitForRemoteVersion(url, anonKey, session.access_token, 1);
+  try {
+    await injectSession(ctx, url, session);
+    const page = await ctx.newPage();
+    await createVaultOn(page);
+    await addSubscriptionOn(page, SERVICE); // gives the index something to mirror
+    await flushPush(page);
+    await waitForRemoteVersion(url, anonKey, session.access_token, 1);
 
-  // The section renders only with a session + push support (SW + PushManager).
-  await gotoSettings(page);
-  const toggle = page.getByRole('switch', { name: /renewal reminders|recordatorios de renovación/i });
-  await expect(toggle).toBeVisible({ timeout: 15_000 });
+    // The section renders only with a session + push support (SW + PushManager).
+    await gotoSettings(page);
+    const toggle = page.getByRole('switch', { name: /renewal reminders|recordatorios de renovación/i });
+    await expect(toggle).toBeVisible({ timeout: 15_000 });
 
-  // ── ON: registers push subscription + mirrors the minimal plaintext index ──
-  await toggle.click();
-  await expect(page.getByText(/cloud reminders are on|recordatorios en la nube activados/i)).toBeVisible({ timeout: 30_000 });
-  expect(await countRows(url, anonKey, session, 'push_subscriptions')).toBeGreaterThanOrEqual(1);
-  expect(await countRows(url, anonKey, session, 'reminders')).toBeGreaterThanOrEqual(1);
+    // ── ON: registers push subscription + mirrors the minimal plaintext index ─
+    await toggle.click();
+    await expect(page.getByText(/cloud reminders are on|recordatorios en la nube activados/i)).toBeVisible({ timeout: 30_000 });
+    expect(await countRows(url, anonKey, session, 'push_subscriptions')).toBeGreaterThanOrEqual(1);
+    expect(await countRows(url, anonKey, session, 'reminders')).toBeGreaterThanOrEqual(1);
 
-  // ── OFF: deletes subscription + index server-side ──────────────────────────
-  await toggle.click();
-  await expect(page.getByText(/index was deleted|índice se borró/i)).toBeVisible({ timeout: 30_000 });
-  expect(await countRows(url, anonKey, session, 'push_subscriptions')).toBe(0);
-  expect(await countRows(url, anonKey, session, 'reminders')).toBe(0);
-
-  await deleteRemoteVault(url, anonKey, session);
-  await ctx.close();
+    // ── OFF: deletes subscription + index server-side ─────────────────────────
+    await toggle.click();
+    await expect(page.getByText(/index was deleted|índice se borró/i)).toBeVisible({ timeout: 30_000 });
+    expect(await countRows(url, anonKey, session, 'push_subscriptions')).toBe(0);
+    expect(await countRows(url, anonKey, session, 'reminders')).toBe(0);
+  } finally {
+    // Teardown also on failure — no remote rows or contexts left behind.
+    await deleteRemoteVault(url, anonKey, session).catch(() => {});
+    await ctx.close();
+  }
 });
