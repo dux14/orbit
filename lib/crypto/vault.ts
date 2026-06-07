@@ -69,3 +69,20 @@ export async function checkVerifier(key: CryptoKey, verifier: string): Promise<b
     return false;
   }
 }
+
+/**
+ * KDF floor: rejects Argon2id params below the defaults. Untrusted metadata
+ * (e.g. a remote row on a compromised backend) must not be able to downgrade
+ * the KDF cost a device will use from then on — the verifier check alone
+ * proves password ownership, not parameter strength.
+ */
+export function meetsKdfFloor(kdf: KdfParams): boolean {
+  const floor = defaultKdf();
+  return (
+    kdf.algo === 'argon2id' &&
+    kdf.memorySize >= floor.memorySize &&
+    kdf.iterations >= floor.iterations &&
+    kdf.parallelism >= floor.parallelism &&
+    kdf.hashLength >= floor.hashLength
+  );
+}

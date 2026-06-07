@@ -61,7 +61,7 @@ export async function applyRemote(remote: RemoteVault): Promise<void> {
  * de subir si su timestamp fuera pisado (reconcile la vería como ya sincronizada).
  * Conservarlo provoca, a lo sumo, un push extra inofensivo.
  */
-async function acceptSyncBase(ref: { version: number; updatedAt: string }): Promise<void> {
+export async function acceptSyncBase(ref: { version: number; updatedAt: string }): Promise<void> {
   const cur = await repository.getSyncState();
   const updatedAt =
     cur && Date.parse(cur.updatedAt) > Date.parse(ref.updatedAt) ? cur.updatedAt : ref.updatedAt;

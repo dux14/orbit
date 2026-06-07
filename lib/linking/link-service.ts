@@ -1,16 +1,21 @@
 // lib/linking/link-service.ts
 import { repository } from '@/lib/db/repository';
 import { vaultStore } from '@/lib/store/vault-store';
-import { deriveKey, decrypt, checkVerifier } from '@/lib/crypto/vault';
-import { classifySituation } from './classify';
+import { deriveKey, decrypt, checkVerifier, meetsKdfFloor } from '@/lib/crypto/vault';
+import { acceptSyncBase } from '@/lib/sync/sync-controller';
+import { classifySituation, parseRemoteMeta } from './classify';
 import { LinkError, type LinkClassification } from './types';
 import type { SyncRepository } from '@/lib/sync/sync-repository';
-import type { RemoteVault, VaultMeta } from '@/lib/sync/types';
+import type { RemoteVault } from '@/lib/sync/types';
 import type { VaultData } from '@/lib/types';
 
 function isNetworkError(e: unknown): boolean {
   const m = (e as { message?: string })?.message ?? '';
-  return /failed to fetch|network|offline|ECONN|fetch/i.test(m);
+  return /failed to fetch|network|offline|ECONN/i.test(m);
+}
+
+function errorDetail(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
 }
 
 /**
@@ -27,7 +32,7 @@ export class LinkService {
     try {
       remote = await this.repo.pullVault();
     } catch (e) {
-      throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', (e as Error).message);
+      throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', errorDetail(e));
     }
     const localMeta = await repository.getMeta();
     return classifySituation({ localMeta, remote });
@@ -42,11 +47,18 @@ export class LinkService {
     try {
       remote = await this.repo.pullVault();
     } catch (e) {
-      throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', (e as Error).message);
+      throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', errorDetail(e));
     }
     if (!remote) throw new LinkError('unknown', 'No remote vault to link');
 
-    const meta = JSON.parse(remote.encryptedMeta) as VaultMeta;
+    const meta = parseRemoteMeta(remote.encryptedMeta);
+    // KDF floor: la meta remota es entrada no confiable (la DB puede estar
+    // comprometida). Sin este piso, una meta con Argon2id degradado quedaría
+    // persistida como la meta local del dispositivo — el verifier prueba
+    // posesión de la password, no la fuerza de los parámetros.
+    if (!meetsKdfFloor(meta.kdf)) {
+      throw new LinkError('unknown', 'Remote vault KDF params below the accepted floor');
+    }
     const key = await deriveKey(password, meta.kdf);
     if (!(await checkVerifier(key, meta.verifier))) {
       throw new LinkError('wrong-password');
@@ -75,9 +87,12 @@ export class LinkService {
     if (!meta || !blob) throw new LinkError('unknown', 'No local vault to push');
     try {
       const saved = await this.repo.pushVault(JSON.stringify(meta), blob, expectedVersion);
-      await repository.saveSyncState({ version: saved.version, updatedAt: saved.updatedAt });
+      // acceptSyncBase (S6) y no saveSyncState directo: preserva un updatedAt
+      // local mayor si hubo una mutación con el push en vuelo — si se pisara,
+      // reconcile la daría por sincronizada y ese edit no subiría nunca.
+      await acceptSyncBase({ version: saved.version, updatedAt: saved.updatedAt });
     } catch (e) {
-      throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', (e as Error).message);
+      throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', errorDetail(e));
     }
   }
 }

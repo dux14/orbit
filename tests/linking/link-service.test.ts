@@ -60,6 +60,22 @@ describe('LinkService', () => {
     expect((await repository.getSyncState())?.version).toBe(2);
   });
 
+  it('linkNewDevice rejects a remote meta with degraded KDF params (downgrade defense)', async () => {
+    // Meta envenenada: KDF por debajo del piso, verifier VÁLIDO bajo esa KDF débil
+    // (peor caso: el atacante conoce la password). El piso debe rechazarla antes
+    // de derivar — el verifier prueba posesión de password, no fuerza de params.
+    const weakKdf = { ...defaultKdf(), salt: generateSalt(), memorySize: 8, iterations: 1 };
+    const weakKey = await deriveKey(PW, weakKdf);
+    const meta: VaultMeta = { schemaVersion: 1, kdf: weakKdf, verifier: await createVerifier(weakKey) };
+    const blob = await encrypt(weakKey, JSON.stringify({ subscriptions: [], credentials: [], paymentMethods: [] }));
+    const remote: RemoteVault = { encryptedMeta: JSON.stringify(meta), encryptedBlob: blob, version: 2, updatedAt: '2026-06-06T10:00:00.000Z' };
+
+    const svc = new LinkService(makeRepo(remote) as never);
+    await expect(svc.linkNewDevice(PW)).rejects.toMatchObject({ code: 'unknown' });
+    // Nada persistido: el vault local no debe existir tras el rechazo.
+    expect(await repository.vaultExists()).toBe(false);
+  });
+
   it('linkNewDevice throws wrong-password LinkError on bad password', async () => {
     const remote = await makeRemote(PW, { subscriptions: [], credentials: [], paymentMethods: [] });
     const svc = new LinkService(makeRepo(remote) as never);

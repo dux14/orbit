@@ -27,8 +27,9 @@ export default defineConfig({
     // Pass the sync flag through to the build: NEXT_PUBLIC_* is inlined at build
     // time and the runner's env wins over .env.local. Default stays off — the
     // multi-device spec self-skips unless NEXT_PUBLIC_SYNC_ENABLED=true is exported.
+    // (Playwright already merges process.env into the webServer child; only the
+    // override belongs here.)
     env: {
-      ...process.env,
       NEXT_PUBLIC_SYNC_ENABLED: process.env.NEXT_PUBLIC_SYNC_ENABLED ?? 'false',
     },
   },

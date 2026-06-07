@@ -20,6 +20,9 @@ export default function LinkPage() {
   const t = useT();
   const router = useRouter();
   const [state, setState] = useState<LinkState>({ phase: 'detecting', situation: null, remote: null, error: null });
+  // In-flight del form de password: el form permanece montado (botón deshabilitado
+  // + "Linking…") en vez de desmontarse — feedback visible y sin doble submit.
+  const [submitting, setSubmitting] = useState(false);
 
   // 1. Detectar la situación al montar.
   useEffect(() => {
@@ -36,6 +39,7 @@ export default function LinkPage() {
           setState({ phase: 'choice', situation: c.situation, remote: c.remote, error: null });
         } else if (c.situation === 'local-only') {
           await svc.linkLocalVault();
+          if (cancelled) return; // unmount durante el push — no navegar desde un efecto muerto
           router.replace('/dashboard');
         } else {
           // both-same / no-remote-no-local → nada que vincular aquí
@@ -52,15 +56,18 @@ export default function LinkPage() {
 
   // 2. Dispositivo nuevo: enviar password.
   const handlePassword = useCallback(async (password: string) => {
-    setState((s) => ({ ...s, phase: 'resolving', error: null }));
-    const svc = await createLinkService();
-    if (!svc) { setState((s) => ({ ...s, phase: 'error', error: 'no-session' })); return; }
+    setSubmitting(true);
+    setState((s) => ({ ...s, error: null }));
     try {
+      const svc = await createLinkService();
+      if (!svc) { setState((s) => ({ ...s, phase: 'error', error: 'no-session' })); return; }
       await svc.linkNewDevice(password);
       router.replace('/dashboard');
     } catch (e) {
       const code = e instanceof LinkError ? e.code : 'unknown';
       setState((s) => ({ ...s, phase: 'need-password', error: code }));
+    } finally {
+      setSubmitting(false);
     }
   }, [router]);
 
@@ -76,14 +83,22 @@ export default function LinkPage() {
   const keepLocal = useCallback(async () => {
     setState((s) => ({ ...s, phase: 'resolving', error: null }));
     const svc = await createLinkService();
-    if (!svc || !state.remote) { router.replace('/dashboard'); return; }
+    if (!svc) { router.replace('/dashboard'); return; }
     try {
-      await svc.linkLocalVault(state.remote.version);
+      // Re-pull: la versión detectada al montar puede estar obsoleta si el otro
+      // dispositivo empujó mientras el usuario decidía (TOCTOU) — un push con
+      // base vieja fallaría con version_conflict en upsert_vault.
+      const c = await svc.detect();
+      if (c.situation === 'both-same' || c.situation === 'no-remote-no-local') {
+        router.replace('/dashboard');
+        return;
+      }
+      await svc.linkLocalVault(c.remote?.version ?? 0);
       router.replace('/dashboard');
     } catch {
       setState((s) => ({ ...s, phase: 'error', error: 'unknown' }));
     }
-  }, [router, state.remote]);
+  }, [router]);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 px-6">
@@ -95,7 +110,7 @@ export default function LinkPage() {
             <h1 className="font-heading text-xl">{t('link.newDeviceTitle')}</h1>
             <p className="text-sm text-muted-foreground">{t('link.newDeviceBody')}</p>
           </div>
-          <LinkPasswordForm onSubmit={handlePassword} error={state.error ? t(errorKey(state.error)) : null} submitting={false} />
+          <LinkPasswordForm onSubmit={handlePassword} error={state.error ? t(errorKey(state.error)) : null} submitting={submitting} />
         </>
       )}
 
