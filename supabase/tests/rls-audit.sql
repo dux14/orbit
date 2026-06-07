@@ -94,7 +94,16 @@ begin;
   -- EXPECTED: hijacked = 0
 rollback;
 
--- 6c. anon CANNOT read any reminders.
+-- 6c. User B CANNOT insert a reminder owned by A (with check blocks it).
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","role":"authenticated"}';
+  insert into public.reminders (user_id, service_label, next_renewal)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'forged', '2026-07-01');
+  -- EXPECTED: ERROR  new row violates row-level security policy
+rollback;
+
+-- 6d. anon CANNOT read any reminders.
 begin;
   set local role anon;
   set local request.jwt.claims = '{"role":"anon"}';
@@ -113,7 +122,27 @@ begin;
   -- EXPECTED: 0
 rollback;
 
--- 7b. anon CANNOT read any push subscriptions.
+-- 7b. User B CANNOT insert a push subscription owned by A.
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","role":"authenticated"}';
+  insert into public.push_subscriptions (user_id, endpoint, p256dh, auth)
+  values ('aaaaaaaa-0000-0000-0000-000000000001', 'https://example.test/forged', 'k', 'a');
+  -- EXPECTED: ERROR  new row violates row-level security policy
+rollback;
+
+-- 7c. User B CANNOT update A's push subscriptions.
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","role":"authenticated"}';
+  update public.push_subscriptions set endpoint = 'https://example.test/hijack'
+  where user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  select count(*) as hijacked from public.push_subscriptions
+  where endpoint = 'https://example.test/hijack';
+  -- EXPECTED: hijacked = 0
+rollback;
+
+-- 7d. anon CANNOT read any push subscriptions.
 begin;
   set local role anon;
   set local request.jwt.claims = '{"role":"anon"}';
@@ -142,7 +171,18 @@ begin;
   -- EXPECTED: ERROR  new row violates row-level security policy
 rollback;
 
--- 8c. anon CANNOT read any sent_reminders.
+-- 8c. Authenticated user CANNOT update sent_reminders (SELECT-only policy).
+begin;
+  set local role authenticated;
+  set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-0000-0000-000000000002","role":"authenticated"}';
+  update public.sent_reminders set sent_on = current_date
+  where user_id = 'bbbbbbbb-0000-0000-0000-000000000002';
+  select count(*) as updated_rows from public.sent_reminders
+  where user_id = 'bbbbbbbb-0000-0000-0000-000000000002' and sent_on = current_date;
+  -- EXPECTED: updated_rows = 0 (no UPDATE policy → 0 rows visible to update)
+rollback;
+
+-- 8d. anon CANNOT read any sent_reminders.
 begin;
   set local role anon;
   set local request.jwt.claims = '{"role":"anon"}';

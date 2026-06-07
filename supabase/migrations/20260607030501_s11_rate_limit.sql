@@ -15,6 +15,11 @@ alter table public.rate_limits enable row level security;
 revoke all on table public.rate_limits from public, anon, authenticated;
 
 -- Fixed-window check: max N writes per WINDOW per user+bucket.
+-- Accepted trade-off: a fixed minute window allows up to 2x bursts at the
+-- boundary (30 at second 59 + 30 at second 0). Fine here: the sync client
+-- debounces 4s on a single-blob model, so sustained 30/min is already
+-- implausible for legitimate traffic. Attempts that later fail (e.g.
+-- version_conflict) also consume quota — rate limiting counts attempts.
 create or replace function public.check_rate_limit(
   p_bucket text, p_max int, p_window interval
 ) returns void language plpgsql security definer
@@ -30,6 +35,9 @@ begin
     do update set count = public.rate_limits.count + 1
     returning count into v_count;
 
+  -- NOTE: the increment above is transactional — RAISE aborts the caller's
+  -- transaction and rolls the count back to p_max. No permanent over-count;
+  -- do NOT "fix" this into a check-then-increment pattern (races + drift).
   if v_count > p_max then
     raise exception 'rate limit exceeded for %', p_bucket using errcode = 'P0001';
   end if;
