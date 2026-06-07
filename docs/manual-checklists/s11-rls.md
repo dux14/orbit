@@ -47,9 +47,30 @@ Corregido a `raise exception 'rate limit exceeded for %', p_bucket using errcode
 Usuarios de prueba eliminados tras la verificación (`remaining_test_users = 0`,
 `leftover_rate_limit_rows = 0` — el test corrió dentro de una transacción con rollback).
 
-### 2.2 Supabase Auth (se completa en T3)
+### 2.2 Supabase Auth (nativo, gestionado por Supabase)
 
-_Pendiente._
+Config efectiva del remoto (GET `/v1/projects/<ref>/config/auth`, 2026-06-06).
+`supabase/config.toml` `[auth.rate_limit]` queda alineado (solo aplica a dev local).
+
+| Límite | Valor efectivo | Ventana |
+|---|---|---|
+| `rate_limit_token_refresh` | 150 | 5 min / IP |
+| `rate_limit_verify` (OTP/magic link verifications) | 30 | 5 min / IP |
+| `rate_limit_otp` | 30 | ventana nativa |
+| `rate_limit_email_sent` | 2 | 1 h |
+| `rate_limit_sms_sent` | 30 | 1 h |
+| `rate_limit_anonymous_users` | 30 | 1 h / IP (anon sign-ins deshabilitados) |
+| `rate_limit_web3` | 30 | 5 min / IP (web3 deshabilitado) |
+| Sign-in/sign-up | 30 / 5 min / IP | default nativo (no expuesto en el GET de la Management API) |
+
+El sign-in real del producto es Google OAuth (PKCE), también cubierto por los límites
+nativos de Auth. `send-reminders` no tiene superficie pública (solo pg_cron con
+`Bearer service_role`, comparación constant-time — ver S10).
+
+⚠️ `mailer_autoconfirm: true` sigue activo — lo requiere el harness E2E (S8) para
+acuñar sesiones por `/auth/v1/signup`. Riesgo: signups por API sin verificación de
+email (la UI solo expone Google OAuth). **Decisión pendiente en S12/pre-producción:**
+desactivarlo o compensar (captcha / deshabilitar provider email).
 
 ## 3. Secrets en bundle (se completa en T5)
 
