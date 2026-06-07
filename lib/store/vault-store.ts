@@ -14,6 +14,7 @@ export interface VaultState {
   data: VaultData | null;
   createVault: (password: string) => Promise<void>;
   unlock: (password: string) => Promise<void>;
+  unlockBio: () => Promise<void>;
   lock: () => void;
   reset: () => void; // test helper
   upsertSubscription: (sub: Subscription) => Promise<void>;
@@ -46,6 +47,13 @@ export const vaultStore = createStore<VaultState>((set, get) => ({
   },
   async unlock(password) {
     const { key, data } = await vaultService.unlock(password);
+    set({ key, data, locked: false });
+    maybeReconcileNow();
+  },
+  async unlockBio() {
+    // Import dinámico: el módulo WebAuthn solo carga si el usuario usa biometría.
+    const { unlockBiometric } = await import('@/lib/webauthn/unlock');
+    const { key, data } = await unlockBiometric();
     set({ key, data, locked: false });
     maybeReconcileNow();
   },
