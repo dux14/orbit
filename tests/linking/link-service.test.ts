@@ -88,4 +88,19 @@ describe('LinkService', () => {
     expect(repo.pushVault).toHaveBeenCalledWith(JSON.stringify(meta), blob, 0);
     expect((await repository.getSyncState())?.version).toBe(1);
   });
+
+  it('linkLocalVault(remoteVersion) pushes with the remote version as expected base', async () => {
+    // Sembrar un vault local
+    const kdf = { ...defaultKdf(), salt: generateSalt() };
+    const key = await deriveKey(PW, kdf);
+    const meta: VaultMeta = { schemaVersion: 1, kdf, verifier: await createVerifier(key) };
+    const blob = await encrypt(key, JSON.stringify({ subscriptions: [], credentials: [], paymentMethods: [] }));
+    await repository.createVault(meta, blob);
+
+    const repo = makeRepo(null);
+    const svc = new LinkService(repo as never);
+    await svc.linkLocalVault(7);
+
+    expect(repo.pushVault).toHaveBeenCalledWith(JSON.stringify(meta), blob, 7);
+  });
 });

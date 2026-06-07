@@ -62,13 +62,19 @@ export class LinkService {
     vaultStore.setState({ key, data, locked: false });
   }
 
-  /** Vault local sin remoto: subir como versión inicial (push con expectedVersion 0). */
-  async linkLocalVault(): Promise<void> {
+  /**
+   * Sube el vault local a Supabase usando `expectedVersion` como base esperada.
+   * - Por defecto (0): push inicial sin fila remota previa (caso local-only).
+   * - Valor > 0: path destructivo "keep local" que sobrescribe la fila remota
+   *   vigente; upsert_vault solo avanza si p_expected_version coincide con la
+   *   versión actual de la fila, así que hay que pasar la versión remota detectada.
+   */
+  async linkLocalVault(expectedVersion = 0): Promise<void> {
     const meta = await repository.getMeta();
     const blob = await repository.getEncryptedData();
     if (!meta || !blob) throw new LinkError('unknown', 'No local vault to push');
     try {
-      const saved = await this.repo.pushVault(JSON.stringify(meta), blob, 0);
+      const saved = await this.repo.pushVault(JSON.stringify(meta), blob, expectedVersion);
       await repository.saveSyncState({ version: saved.version, updatedAt: saved.updatedAt });
     } catch (e) {
       throw new LinkError(isNetworkError(e) ? 'offline' : 'unknown', (e as Error).message);
