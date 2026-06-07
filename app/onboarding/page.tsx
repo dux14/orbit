@@ -8,9 +8,10 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { vaultStore } from '@/lib/store/vault-store';
-import { settingsStore } from '@/lib/store/settings-store';
 import { useT } from '@/lib/i18n/use-t';
+// Vault stores pull Dexie + crypto into the bundle (~30 KB gz). This is a
+// PUBLIC route on the Lighthouse critical path — defer them to the submit
+// handler that actually needs them (S7 deferred item: unused JS).
 import { cn } from '@/lib/utils';
 
 // ── Password strength ──────────────────────────────────────────────────────────
@@ -70,6 +71,10 @@ export default function OnboardingPage() {
     setLoading(true);
     setError('');
     try {
+      const [{ vaultStore }, { settingsStore }] = await Promise.all([
+        import('@/lib/store/vault-store'),
+        import('@/lib/store/settings-store'),
+      ]);
       await vaultStore.getState().createVault(password);
       // Load settings after vault creation
       await settingsStore.getState().loadSettings();
