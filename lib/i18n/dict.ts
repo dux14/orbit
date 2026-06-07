@@ -285,6 +285,29 @@ const en = {
   'sync.conflictUseRemote':     'Use the other device',
   'sync.conflictCancel':        'Decide later',
   'sync.conflictResolving':     'Resolving…',
+
+  // ── Account linking / Multi-device ──────────────────────────────────────────
+  'link.detecting':             'Checking your account…',
+  'link.newDeviceTitle':        'Unlock your synced vault',
+  'link.newDeviceBody':         'This account already has an encrypted vault. Enter your master password to download and decrypt it on this device.',
+  'link.passwordLabel':         'Master password',
+  'link.passwordPlaceholder':   'Enter your master password',
+  'link.submit':                'Unlock & link device',
+  'link.submitting':            'Linking…',
+  'link.wrongPassword':         'Incorrect master password',
+  'link.offline':               'No connection — check your network and try again',
+  'link.noSession':             'You are signed out',
+  'link.unknownError':          'Something went wrong — try again',
+  'link.linkedTitle':           'Device linked',
+  'link.linkedBody':            'Your vault is now synced on this device.',
+  'link.pushTitle':             'Enabling sync',
+  'link.pushBody':              'Uploading your encrypted vault for the first time…',
+  'link.choiceTitle':           'Two different vaults found',
+  'link.choiceBody':            'This device and your account have different vaults. Keep only one — the other will be permanently replaced on this account.',
+  'link.choiceKeepLocal':       'Keep this device’s vault',
+  'link.choiceKeepRemote':      'Keep the account’s vault',
+  'link.choiceWarning':         'This cannot be undone.',
+  'link.choiceCancel':          'Cancel',
 } as const;
 
 const es = {
@@ -566,6 +589,29 @@ const es = {
   'sync.conflictUseRemote':     'Usar el otro dispositivo',
   'sync.conflictCancel':        'Decidir más tarde',
   'sync.conflictResolving':     'Resolviendo…',
+
+  // ── Account linking / Multi-device ──────────────────────────────────────────
+  'link.detecting':             'Comprobando tu cuenta…',
+  'link.newDeviceTitle':        'Desbloquea tu vault sincronizado',
+  'link.newDeviceBody':         'Esta cuenta ya tiene un vault cifrado. Introduce tu master password para descargarlo y descifrarlo en este dispositivo.',
+  'link.passwordLabel':         'Master password',
+  'link.passwordPlaceholder':   'Introduce tu master password',
+  'link.submit':                'Desbloquear y vincular dispositivo',
+  'link.submitting':            'Vinculando…',
+  'link.wrongPassword':         'Master password incorrecta',
+  'link.offline':               'Sin conexión — revisa tu red e inténtalo de nuevo',
+  'link.noSession':             'Has cerrado sesión',
+  'link.unknownError':          'Algo salió mal — inténtalo de nuevo',
+  'link.linkedTitle':           'Dispositivo vinculado',
+  'link.linkedBody':            'Tu vault ya está sincronizado en este dispositivo.',
+  'link.pushTitle':             'Activando sincronización',
+  'link.pushBody':              'Subiendo tu vault cifrado por primera vez…',
+  'link.choiceTitle':           'Se encontraron dos vaults distintos',
+  'link.choiceBody':            'Este dispositivo y tu cuenta tienen vaults diferentes. Conserva solo uno — el otro será reemplazado permanentemente en esta cuenta.',
+  'link.choiceKeepLocal':       'Conservar el vault de este dispositivo',
+  'link.choiceKeepRemote':      'Conservar el vault de la cuenta',
+  'link.choiceWarning':         'Esto no se puede deshacer.',
+  'link.choiceCancel':          'Cancelar',
 } as const;
 
 export type DictKey = keyof typeof en;
