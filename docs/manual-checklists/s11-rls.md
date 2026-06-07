@@ -72,6 +72,30 @@ acuñar sesiones por `/auth/v1/signup`. Riesgo: signups por API sin verificació
 email (la UI solo expone Google OAuth). **Decisión pendiente en S12/pre-producción:**
 desactivarlo o compensar (captcha / deshabilitar provider email).
 
-## 3. Secrets en bundle (se completa en T5)
+## 3. CSP / headers en build de producción
 
-_Pendiente._
+`pnpm build && pnpm start` + `curl -sI http://localhost:3000/` (2026-06-06):
+
+- `content-security-policy`: `connect-src 'self' https://open.er-api.com https://vmcjkleuetcogqhdnlfx.supabase.co wss://vmcjkleuetcogqhdnlfx.supabase.co` ✅ (https + wss, añadidos en S4/S6)
+- `script-src 'self' 'nonce-…' 'strict-dynamic' 'wasm-unsafe-eval'` ✅ (nonce-strict intacto, sin unsafe-eval/inline)
+- `x-content-type-options: nosniff` · `x-frame-options: DENY` · `referrer-policy: no-referrer` · `strict-transport-security: max-age=63072000; includeSubDomains; preload` · `permissions-policy: camera=(), microphone=(), geolocation=()` ✅
+- Sin violaciones CSP en navegador real: cubierto por la suite E2E (corre contra build prod, incluye unlock con argon2id/wasm).
+
+## 4. Secrets en bundle (`.next`, build prod local)
+
+| Patrón | Esperado | Resultado | ✓ |
+|---|---|---|---|
+| `sb_secret` en `.next` | ausente | `NO sb_secret in bundle` | ✅ |
+| `service_role` en `.next/static` | ausente | `NO service_role in client bundle` | ✅ |
+| `VAPID_PRIVATE` en `.next` | ausente | `NO VAPID_PRIVATE in bundle` | ✅ |
+| `sbp_` (PAT) en `.next/static` | ausente | `NO sbp_ in client bundle` | ✅ |
+| `GOCSPX` (Google secret) en `.next` | ausente | `NO GOCSPX in bundle` | ✅ |
+
+Valores publicables inlineados (Next inlinea valores, no nombres — el grep por
+`NEXT_PUBLIC_[A-Z_]*` en chunks minificados sale vacío por diseño):
+
+- URL Supabase (`vmcjkleuetcogqhdnlfx.supabase.co`) ✅ inlineada
+- Anon key (`sb_publishable_…`) ✅ inlineada (publicable por diseño)
+- VAPID pública: NO presente en el build local — esperado: `NEXT_PUBLIC_SYNC_ENABLED=false`
+  local hace que DCE elimine `CloudRemindersSection`/`subscribe.ts` del bundle. En Vercel
+  (flag ON) sí se inlinea (verificado en S10). No es un hallazgo: la clave es pública.
