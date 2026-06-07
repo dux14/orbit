@@ -325,6 +325,23 @@ const en = {
   'unlock.bioWorking':            'Waiting for biometrics…',
   'unlock.bioError':              'Biometric unlock failed. Use your master password.',
   'unlock.orPassword':            'or enter your master password',
+
+  // ── Cloud reminders (opt-in, S10) ──────────────────────────────────────────
+  'reminders.section.title':        'Cloud reminders',
+  'reminders.toggle.label':         'Send renewal reminders to my devices',
+  'reminders.toggle.off':           'Off',
+  'reminders.toggle.on':            'On',
+  'reminders.disclosure.title':     'What this shares with Orbit’s server',
+  'reminders.disclosure.body':      'To send reminders while the app is closed, Orbit stores a minimal index on its server: the service name and the renewal date only. This small subset is NOT end-to-end encrypted. Amounts, emails, card details, passwords and notes are never sent and stay encrypted on your device.',
+  'reminders.disclosure.default':   'This is off by default. With it off, reminders stay on this device only.',
+  'reminders.ios.note':             'On iPhone and iPad, push notifications require installing Orbit to the Home Screen (iOS 16.4 or later).',
+  'reminders.permission.prompt':    'Allow notifications',
+  'reminders.permission.denied':    'Notifications are blocked in your browser settings. Enable them to receive reminders.',
+  'reminders.enabling':             'Enabling cloud reminders…',
+  'reminders.disabling':            'Turning off and deleting your index…',
+  'reminders.enabled':              'Cloud reminders are on.',
+  'reminders.disabled':             'Cloud reminders are off. Your index was deleted from the server.',
+  'reminders.lead.label':           'Notify me this many days before renewal',
 } as const;
 
 const es = {
@@ -646,6 +663,23 @@ const es = {
   'unlock.bioWorking':            'Esperando biometría…',
   'unlock.bioError':              'El desbloqueo biométrico falló. Usa tu contraseña maestra.',
   'unlock.orPassword':            'o ingresa tu contraseña maestra',
+
+  // ── Recordatorios cloud (opt-in, S10) ──────────────────────────────────────
+  'reminders.section.title':        'Recordatorios en la nube',
+  'reminders.toggle.label':         'Enviar recordatorios de renovación a mis dispositivos',
+  'reminders.toggle.off':           'Desactivado',
+  'reminders.toggle.on':            'Activado',
+  'reminders.disclosure.title':     'Qué se comparte con el servidor de Orbit',
+  'reminders.disclosure.body':      'Para enviarte recordatorios con la app cerrada, Orbit guarda en su servidor un índice mínimo: solo el nombre del servicio y la fecha de renovación. Este pequeño subconjunto NO está cifrado de extremo a extremo. Los importes, correos, datos de tarjeta, contraseñas y notas nunca se envían y permanecen cifrados en tu dispositivo.',
+  'reminders.disclosure.default':   'Esto está desactivado por defecto. Mientras esté desactivado, los recordatorios solo viven en este dispositivo.',
+  'reminders.ios.note':             'En iPhone y iPad, las notificaciones push requieren instalar Orbit en la pantalla de inicio (iOS 16.4 o posterior).',
+  'reminders.permission.prompt':    'Permitir notificaciones',
+  'reminders.permission.denied':    'Las notificaciones están bloqueadas en los ajustes del navegador. Actívalas para recibir recordatorios.',
+  'reminders.enabling':             'Activando recordatorios en la nube…',
+  'reminders.disabling':            'Desactivando y borrando tu índice…',
+  'reminders.enabled':              'Recordatorios en la nube activados.',
+  'reminders.disabled':             'Recordatorios en la nube desactivados. Tu índice se borró del servidor.',
+  'reminders.lead.label':           'Avisarme estos días antes de la renovación',
 } as const;
 
 export type DictKey = keyof typeof en;
