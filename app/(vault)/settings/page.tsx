@@ -35,6 +35,7 @@ import { settingsStore, useSettingsStore } from '@/lib/store/settings-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { SyncStatus } from '@/components/sync/sync-status';
 import { BiometricToggle } from '@/components/settings/BiometricToggle';
+import { CloudRemindersSection } from '@/components/settings/CloudRemindersSection';
 import { resetSyncService } from '@/lib/sync/sync-trigger';
 import { vaultStore } from '@/lib/store/vault-store';
 import { repository } from '@/lib/db/repository';
@@ -529,6 +530,9 @@ export default function SettingsPage() {
 
         {/* ── Account (optional sync — flag-gated) ──────────────────────── */}
         {SYNC_ENABLED && <AccountSection />}
+
+        {/* ── Cloud reminders (opt-in; needs sync flag + session + push) ── */}
+        {SYNC_ENABLED && <CloudRemindersSection />}
 
         {/* ── Danger zone ──────────────────────────────────────────────── */}
         <Section title={t('settings.danger')} danger>

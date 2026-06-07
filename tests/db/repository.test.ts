@@ -8,7 +8,7 @@ const meta: VaultMeta = {
   kdf: { algo: 'argon2id', salt: 'c2FsdHNhbHRzYWx0c2E=', memorySize: 19456, iterations: 2, parallelism: 1, hashLength: 32 },
   verifier: 'dmVyaWZpZXI=',
 };
-const settings: Settings = { primaryCurrency: 'USD', theme: 'system', locale: 'en', reminderLeadDays: 3, autoLockMinutes: 5 };
+const settings: Settings = { primaryCurrency: 'USD', theme: 'system', locale: 'en', reminderLeadDays: 3, autoLockMinutes: 5, cloudReminders: false };
 
 beforeEach(async () => { await db.delete(); await db.open(); });
 

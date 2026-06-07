@@ -9,6 +9,7 @@ const DEFAULTS: Settings = {
   locale: 'en',
   reminderLeadDays: 3,
   autoLockMinutes: 5,
+  cloudReminders: false,
 };
 
 interface SettingsState {
@@ -25,7 +26,9 @@ export const settingsStore = createStore<SettingsState>((set, get) => ({
   async loadSettings() {
     try {
       const stored = await repository.getSettings();
-      set({ settings: stored ?? DEFAULTS, loaded: true });
+      // Merge over defaults so settings persisted before a new field existed
+      // (e.g. cloudReminders, S10) still satisfy the full Settings shape.
+      set({ settings: stored ? { ...DEFAULTS, ...stored } : DEFAULTS, loaded: true });
     } catch {
       set({ settings: DEFAULTS, loaded: true });
     }

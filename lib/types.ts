@@ -51,6 +51,7 @@ export interface Settings {
   locale: Locale;
   reminderLeadDays: number;    // default 3
   autoLockMinutes: number;     // default 5
+  cloudReminders: boolean;     // opt-in cloud push reminders (S10); default false
 }
 
 export interface KdfParams {
