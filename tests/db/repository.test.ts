@@ -31,6 +31,16 @@ describe('repository', () => {
     await repo.saveSettings(settings);
     expect(await repo.getSettings()).toEqual(settings);
   });
+  it('stores, reads and deletes a bio credential; wipe clears it', async () => {
+    const bio = { credentialId: 'abc', prfSalt: 'c2FsdA==', wrappedVaultKey: 'd3JhcA==', createdAt: '2026-06-06T00:00:00Z' };
+    await repo.saveBio(bio);
+    expect(await repo.getBio()).toEqual(bio);
+    await repo.deleteBio();
+    expect(await repo.getBio()).toBeUndefined();
+    await repo.saveBio(bio);
+    await repo.wipeVault();
+    expect(await repo.getBio()).toBeUndefined();
+  });
   it('wipes everything', async () => {
     await repo.createVault(meta, 'X');
     await repo.saveSettings(settings);

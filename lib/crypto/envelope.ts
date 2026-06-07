@@ -31,9 +31,10 @@ export async function wrapVaultKey(vaultKey: CryptoKey, kek: CryptoKey): Promise
 
 /** Unwrap a base64 AES-KW blob back into a usable AES-GCM VaultKey. Throws on bad KEK. */
 export async function unwrapVaultKey(wrapped: string, kek: CryptoKey): Promise<CryptoKey> {
+  // Copy into a fresh Uint8Array to satisfy WebCrypto's BufferSource type constraint
   return crypto.subtle.unwrapKey(
     'raw',
-    fromBase64(wrapped),
+    new Uint8Array(fromBase64(wrapped)),
     kek,
     { name: 'AES-KW' },
     { name: 'AES-GCM', length: 256 },
@@ -47,5 +48,5 @@ export async function exportVaultKeyRaw(vaultKey: CryptoKey): Promise<Uint8Array
 }
 
 export async function importVaultKeyRaw(raw: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+  return crypto.subtle.importKey('raw', new Uint8Array(raw), { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
 }

@@ -1,5 +1,5 @@
 import { db } from './database';
-import type { VaultMeta, Settings, FxRatesCache } from '@/lib/types';
+import type { VaultMeta, Settings, FxRatesCache, BioCredential } from '@/lib/types';
 import type { LocalVaultRef } from '@/lib/sync/types';
 
 const META_KEY = 'meta';
@@ -7,6 +7,7 @@ const BLOB_KEY = 'blob';
 const SETTINGS_KEY = 'settings';
 const FX_KEY = 'fx';
 const SYNC_KEY = 'sync';
+const BIO_KEY = 'bio';
 
 export const repository = {
   async vaultExists(): Promise<boolean> {
@@ -20,6 +21,9 @@ export const repository = {
   },
   async getMeta(): Promise<VaultMeta | undefined> {
     return (await db.meta.get(META_KEY))?.value;
+  },
+  async saveMeta(meta: VaultMeta): Promise<void> {
+    await db.meta.put({ key: META_KEY, value: meta });
   },
   async getEncryptedData(): Promise<string | undefined> {
     return (await db.blob.get(BLOB_KEY))?.value;
@@ -53,9 +57,18 @@ export const repository = {
       await db.sync.put({ key: SYNC_KEY, value: { version: cur?.version ?? 0, updatedAt } });
     });
   },
+  async getBio(): Promise<BioCredential | undefined> {
+    return (await db.bio.get(BIO_KEY))?.value;
+  },
+  async saveBio(bio: BioCredential): Promise<void> {
+    await db.bio.put({ key: BIO_KEY, value: bio });
+  },
+  async deleteBio(): Promise<void> {
+    await db.bio.delete(BIO_KEY);
+  },
   async wipeVault(): Promise<void> {
-    await db.transaction('rw', [db.meta, db.blob, db.settings, db.fx, db.sync], async () => {
-      await Promise.all([db.meta.clear(), db.blob.clear(), db.settings.clear(), db.fx.clear(), db.sync.clear()]);
+    await db.transaction('rw', [db.meta, db.blob, db.settings, db.fx, db.sync, db.bio], async () => {
+      await Promise.all([db.meta.clear(), db.blob.clear(), db.settings.clear(), db.fx.clear(), db.sync.clear(), db.bio.clear()]);
     });
   },
 };
