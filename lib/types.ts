@@ -62,10 +62,27 @@ export interface KdfParams {
   hashLength: number;          // bytes (32)
 }
 
+export interface WrappedKeys {
+  /** VaultKey envuelta con KEK_master (Argon2id(password)) vía AES-KW, base64. */
+  master: string;
+}
+
 export interface VaultMeta {
-  schemaVersion: number;
+  schemaVersion: number;          // forma de VaultData (sin cambios)
   kdf: KdfParams;
-  verifier: string;            // base64 ciphertext of VERIFIER_CONSTANT
+  verifier: string;               // base64 AES-GCM(VERIFIER_CONSTANT) bajo VaultKey (v1) o KEK_master (v0)
+  /** undefined => formato legado v0 (KDF cifra el blob directo). 1 => envelope. */
+  envelopeVersion?: number;
+  /** Presente solo cuando envelopeVersion >= 1. */
+  wrappedKeys?: WrappedKeys;
+}
+
+/** Per-device biometric credential row (IndexedDB `bio` table; never in meta/backups). */
+export interface BioCredential {
+  credentialId: string;           // base64url del rawId del passkey
+  prfSalt: string;                // base64 del salt PRF fijo de la app
+  wrappedVaultKey: string;        // base64 AES-KW(VaultKey) bajo KEK_bio
+  createdAt: string;              // ISO 8601
 }
 
 /** Sensitive data — only ever persisted as one encrypted blob. */
