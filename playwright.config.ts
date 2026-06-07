@@ -24,6 +24,13 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    // Pass the sync flag through to the build: NEXT_PUBLIC_* is inlined at build
+    // time and the runner's env wins over .env.local. Default stays off — the
+    // multi-device spec self-skips unless NEXT_PUBLIC_SYNC_ENABLED=true is exported.
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_SYNC_ENABLED: process.env.NEXT_PUBLIC_SYNC_ENABLED ?? 'false',
+    },
   },
 
   projects: [
