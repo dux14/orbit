@@ -1,5 +1,6 @@
 import { repository } from '@/lib/db/repository';
 import { deriveKey, checkVerifier, decrypt } from '@/lib/crypto/vault';
+import { deriveKekFromPassword, unwrapVaultKey } from '@/lib/crypto/envelope';
 import type { BackupFile, VaultData } from '@/lib/types';
 import type { VaultSession } from '@/lib/services/vault-service';
 
@@ -14,9 +15,25 @@ export async function exportBackup(): Promise<BackupFile> {
 
 export async function importBackup(file: BackupFile, password: string): Promise<VaultSession> {
   if (file.format !== 'orbit-backup') throw new Error('Invalid backup file');
-  const key = await deriveKey(password, file.meta.kdf);
-  if (!(await checkVerifier(key, file.meta.verifier))) throw new Error('Incorrect master password');
+
+  let key: CryptoKey;
+  if (file.meta.envelopeVersion && file.meta.wrappedKeys) {
+    // v1 envelope: unwrap VaultKey with KEK_master, then verify with the VaultKey.
+    const kek = await deriveKekFromPassword(password, file.meta.kdf);
+    try {
+      key = await unwrapVaultKey(file.meta.wrappedKeys.master, kek);
+    } catch {
+      throw new Error('Incorrect master password');
+    }
+    if (!(await checkVerifier(key, file.meta.verifier))) throw new Error('Incorrect master password');
+  } else {
+    // v0 legacy: KDF key both verifies and decrypts the blob.
+    key = await deriveKey(password, file.meta.kdf);
+    if (!(await checkVerifier(key, file.meta.verifier))) throw new Error('Incorrect master password');
+  }
+
   const data: VaultData = JSON.parse(await decrypt(key, file.data));
+  // Restore meta+blob verbatim (v1 stays v1, v0 migrates on next unlock).
   await repository.createVault(file.meta, file.data);
   return { key, data };
 }
