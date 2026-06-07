@@ -25,9 +25,31 @@ Datos sembrados: 1 vault de A, 1 reminder de A. Eliminados al cerrar la auditor�
 
 **Veredicto: 13/13 PASS.** Ninguna fuga cruzada ni acceso anon en ninguna tabla.
 
-## 2. Rate limiting (se completa en T2/T3)
+## 2. Rate limiting
 
-_Pendiente: límites de `upsert_vault` y de Supabase Auth._
+### 2.1 `upsert_vault` (DB, migración `20260607030501_s11_rate_limit`)
+
+Límite: **30 escrituras/minuto por usuario** (ventana fija por minuto, tabla `rate_limits` deny-all).
+`upsert_vault` pasó de `security invoker` a `security definer` con scoping explícito a `auth.uid()`,
+`set search_path = public` y check de `auth.uid() is null`.
+
+| Check | Esperado | Resultado real | ✓ |
+|---|---|---|---|
+| 31 llamadas seguidas como usuario A | #1–30 OK, #31 falla | `failed at call 31: rate limit exceeded for upsert_vault` | ✅ |
+| anon ejecuta `upsert_vault` | permission denied | `42501: permission denied for function upsert_vault` | ✅ |
+| authenticated ejecuta `check_rate_limit` directo | permission denied | `42501: permission denied for function check_rate_limit` | ✅ |
+| authenticated lee `public.rate_limits` | permission denied | `42501: permission denied for table rate_limits` | ✅ |
+
+Desviación del plan: el `raise exception` literal del plan especificaba MESSAGE dos veces
+(`raise exception 'rate_limited' using message = …`) → error `RAISE option already specified`.
+Corregido a `raise exception 'rate limit exceeded for %', p_bucket using errcode = 'P0001'`.
+
+Usuarios de prueba eliminados tras la verificación (`remaining_test_users = 0`,
+`leftover_rate_limit_rows = 0` — el test corrió dentro de una transacción con rollback).
+
+### 2.2 Supabase Auth (se completa en T3)
+
+_Pendiente._
 
 ## 3. Secrets en bundle (se completa en T5)
 
