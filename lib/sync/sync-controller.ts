@@ -1,7 +1,8 @@
 // lib/sync/sync-controller.ts
 import { repository } from '@/lib/db/repository';
 import { vaultStore } from '@/lib/store/vault-store';
-import { decrypt, checkVerifier } from '@/lib/crypto/vault';
+import { decrypt, checkVerifier, meetsKdfFloor } from '@/lib/crypto/vault';
+import { assertVaultData } from '@/lib/vault-data';
 import { SyncRepository } from './sync-repository';
 import { SyncService, type LocalSnapshot } from './sync-service';
 import type { RemoteVault, VaultMeta } from './types';
@@ -49,7 +50,14 @@ export async function applyRemote(remote: RemoteVault): Promise<void> {
   if (!(await checkVerifier(key, meta.verifier))) {
     throw new Error('applyRemote: remote meta verifier does not match current key — rejecting');
   }
-  const data = JSON.parse(await decrypt(key, remote.encryptedBlob)) as VaultData;
+  // KDF floor: en v1 el verifier prueba la VaultKey, no la fuerza de meta.kdf —
+  // un kdf degradado en la fila remota quedaría persistido como política local
+  // del próximo unlock por password (security review S9, H1).
+  if (!meetsKdfFloor(meta.kdf)) {
+    throw new Error('applyRemote: remote meta KDF params below the accepted floor — rejecting');
+  }
+  const data: VaultData = JSON.parse(await decrypt(key, remote.encryptedBlob));
+  assertVaultData(data);
   // Memoria primero, Dexie después — mismo orden que vault-store (set → persist).
   vaultStore.setState({ data });
   await repository.createVault(meta, remote.encryptedBlob);

@@ -1,13 +1,10 @@
 import { repository } from '@/lib/db/repository';
 import { wrapVaultKey } from '@/lib/crypto/envelope';
 import { deriveKekFromPrf } from './kek-bio';
-import { APP_PRF_SALT_B64 } from './support';
-import { fromBase64, toBase64 } from '@/lib/crypto/vault';
+import { APP_PRF_SALT_B64, type PrfClientOutputs } from './support';
+import { toBase64Url } from './base64url';
+import { fromBase64 } from '@/lib/crypto/vault';
 import type { BioCredential } from '@/lib/types';
-
-function toBase64Url(bytes: Uint8Array): string {
-  return toBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
 
 export class PrfUnsupportedError extends Error {
   constructor() { super('Authenticator did not return a PRF result'); this.name = 'PrfUnsupportedError'; }
@@ -45,7 +42,7 @@ export async function enrollBiometric(vaultKey: CryptoKey): Promise<BioCredentia
 
   if (!cred) throw new PrfUnsupportedError();
 
-  const ext = cred.getClientExtensionResults() as { prf?: { enabled?: boolean; results?: { first?: ArrayBuffer } } };
+  const ext = cred.getClientExtensionResults() as PrfClientOutputs;
   const prfFirst = ext.prf?.results?.first;
   if (!prfFirst) {
     // Some platforms only report prf.enabled at create() and require a follow-up

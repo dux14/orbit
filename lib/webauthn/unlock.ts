@@ -1,14 +1,12 @@
 import { repository } from '@/lib/db/repository';
 import { unwrapVaultKey } from '@/lib/crypto/envelope';
 import { deriveKekFromPrf } from './kek-bio';
+import { fromBase64Url } from './base64url';
 import { decrypt, checkVerifier, fromBase64 } from '@/lib/crypto/vault';
+import { assertVaultData } from '@/lib/vault-data';
+import type { PrfClientOutputs } from './support';
 import type { VaultData } from '@/lib/types';
 import type { VaultSession } from '@/lib/services/vault-service';
-
-function fromBase64Url(s: string): Uint8Array {
-  const pad = s.length % 4 === 0 ? '' : '='.repeat(4 - (s.length % 4));
-  return fromBase64(s.replace(/-/g, '+').replace(/_/g, '/') + pad);
-}
 
 const emptyData = (): VaultData => ({ subscriptions: [], credentials: [], paymentMethods: [] });
 
@@ -39,7 +37,7 @@ export async function unlockBiometric(): Promise<VaultSession> {
   })) as PublicKeyCredential | null;
 
   if (!assertion) throw new BiometricUnavailableError('No assertion');
-  const ext = assertion.getClientExtensionResults() as { prf?: { results?: { first?: ArrayBuffer } } };
+  const ext = assertion.getClientExtensionResults() as PrfClientOutputs;
   const prfFirst = ext.prf?.results?.first;
   if (!prfFirst) throw new BiometricUnavailableError('No PRF result');
 
@@ -54,5 +52,6 @@ export async function unlockBiometric(): Promise<VaultSession> {
 
   const blob = await repository.getEncryptedData();
   const data: VaultData = blob ? JSON.parse(await decrypt(vaultKey, blob)) : emptyData();
+  assertVaultData(data);
   return { key: vaultKey, data };
 }

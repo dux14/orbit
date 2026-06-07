@@ -1,7 +1,8 @@
 import { repository } from '@/lib/db/repository';
-import { encrypt, decrypt, createVerifier, checkVerifier, defaultKdf, generateSalt } from '@/lib/crypto/vault';
+import { encrypt, decrypt, createVerifier, checkVerifier, defaultKdf, generateSalt, meetsKdfFloor } from '@/lib/crypto/vault';
 import { generateVaultKey, deriveKekFromPassword, wrapVaultKey, unwrapVaultKey } from '@/lib/crypto/envelope';
 import { migrateLegacyVault } from './vault-migration';
+import { assertVaultData } from '@/lib/vault-data';
 import type { VaultData, VaultMeta } from '@/lib/types';
 
 const SCHEMA_VERSION = 1;
@@ -40,11 +41,18 @@ export const vaultService = {
     if (meta.envelopeVersion === undefined || meta.wrappedKeys === undefined) {
       meta = await migrateLegacyVault(password, meta);
     }
+    // Explicit guard instead of a non-null assertion: a future envelopeVersion
+    // with missing wrappedKeys must fail with a typed error, not a TypeError.
+    const wrappedMaster = meta.wrappedKeys?.master;
+    if (!wrappedMaster) throw new Error('Corrupt vault meta: wrappedKeys missing');
+    // Sanity floor on the persisted meta — untrusted writers (sync/import) are
+    // floor-checked at their boundaries; this is defense in depth.
+    if (!meetsKdfFloor(meta.kdf)) throw new Error('Vault meta KDF params below the accepted floor');
 
     const kek = await deriveKekFromPassword(password, meta.kdf);
     let vaultKey: CryptoKey;
     try {
-      vaultKey = await unwrapVaultKey(meta.wrappedKeys!.master, kek);
+      vaultKey = await unwrapVaultKey(wrappedMaster, kek);
     } catch {
       // AES-KW integrity rejection => wrong password
       throw new Error('Incorrect master password');
@@ -52,6 +60,7 @@ export const vaultService = {
     if (!(await checkVerifier(vaultKey, meta.verifier))) throw new Error('Incorrect master password');
     const blob = await repository.getEncryptedData();
     const data: VaultData = blob ? JSON.parse(await decrypt(vaultKey, blob)) : emptyData();
+    assertVaultData(data);
     return { key: vaultKey, data };
   },
 

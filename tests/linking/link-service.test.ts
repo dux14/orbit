@@ -106,6 +106,17 @@ describe('LinkService', () => {
     expect((await repository.getMeta())?.envelopeVersion).toBe(1);
   });
 
+  it('linkNewDevice invalidates a stale bio credential from a previous vault', async () => {
+    await repository.saveBio({ credentialId: 'abc', prfSalt: 'c2FsdA==', wrappedVaultKey: 'd3JhcA==', createdAt: '2026-06-06T00:00:00Z' });
+    const remote = await makeRemoteV1(PW, { subscriptions: [], credentials: [], paymentMethods: [] });
+    const svc = new LinkService(makeRepo(remote) as never);
+
+    await svc.linkNewDevice(PW);
+
+    // El vault vinculado tiene otra VaultKey: la credencial vieja debe borrarse.
+    expect(await repository.getBio()).toBeUndefined();
+  });
+
   it('linkNewDevice rejects wrong password on an envelope v1 remote (AES-KW rejection)', async () => {
     const remote = await makeRemoteV1(PW, { subscriptions: [], credentials: [], paymentMethods: [] });
     const svc = new LinkService(makeRepo(remote) as never);

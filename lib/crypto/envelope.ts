@@ -43,10 +43,6 @@ export async function unwrapVaultKey(wrapped: string, kek: CryptoKey): Promise<C
   );
 }
 
-export async function exportVaultKeyRaw(vaultKey: CryptoKey): Promise<Uint8Array> {
-  return new Uint8Array(await crypto.subtle.exportKey('raw', vaultKey));
-}
-
-export async function importVaultKeyRaw(raw: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', new Uint8Array(raw), { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
-}
+// NOTE: deliberately NO export/import of the raw VaultKey. The key must only
+// ever leave memory AES-KW-wrapped; a raw-bytes helper invites a future caller
+// to persist or transmit cleartext key material (security review S9, L1).

@@ -5,8 +5,6 @@ import {
   deriveKekFromPassword,
   wrapVaultKey,
   unwrapVaultKey,
-  exportVaultKeyRaw,
-  importVaultKeyRaw,
 } from '@/lib/crypto/envelope';
 
 const kdf = () => ({ ...defaultKdf(), salt: generateSalt() });
@@ -39,12 +37,4 @@ describe('envelope primitives', () => {
     ).rejects.toThrow();
   });
 
-  it('exports and re-imports raw VaultKey material', async () => {
-    const vk = await generateVaultKey();
-    const raw = await exportVaultKeyRaw(vk);
-    expect(raw.byteLength).toBe(32);
-    const vk2 = await importVaultKeyRaw(raw);
-    const ct = await encrypt(vk, 'x');
-    expect(await decrypt(vk2, ct)).toBe('x');
-  });
 });

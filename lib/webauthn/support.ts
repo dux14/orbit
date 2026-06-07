@@ -6,16 +6,19 @@
  */
 export const APP_PRF_SALT_B64 = 'r9g8k/CkzwEzlqLGwSMDiutbOXOyC54pP15SaKSt/io=';
 
+/** Shape of getClientExtensionResults() for the PRF extension — not yet in the
+ *  stable DOM lib. Single shared definition for enroll + unlock (ts review S9, H4). */
+export interface PrfClientOutputs {
+  prf?: { enabled?: boolean; results?: { first?: ArrayBuffer } };
+}
+
 /** Cheap capability gate for showing the enroll UI. Real PRF support is only
  *  known after credentials.create() — see enroll.ts (strict, no boolean gate). */
 export async function isPlatformAuthenticatorMaybeAvailable(): Promise<boolean> {
   if (typeof PublicKeyCredential === 'undefined') return false;
-  const fn = (PublicKeyCredential as unknown as {
-    isUserVerifyingPlatformAuthenticatorAvailable?: () => Promise<boolean>;
-  }).isUserVerifyingPlatformAuthenticatorAvailable;
-  if (typeof fn !== 'function') return false;
+  // The DOM lib types this static; optional-call still guards older runtimes.
   try {
-    return await fn.call(PublicKeyCredential);
+    return (await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.()) ?? false;
   } catch {
     return false;
   }

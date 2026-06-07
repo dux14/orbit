@@ -9,8 +9,10 @@ const HKDF_SALT = new TextEncoder().encode('orbit-bio-hkdf-salt-v1');
  */
 export async function deriveKekFromPrf(prfOutput: ArrayBuffer): Promise<CryptoKey> {
   const ikm = await crypto.subtle.importKey('raw', prfOutput, 'HKDF', false, ['deriveKey']);
+  // Fresh copies: TypedArray consts are mutable views; a stray write elsewhere
+  // must not silently corrupt the domain-separation constants.
   return crypto.subtle.deriveKey(
-    { name: 'HKDF', hash: 'SHA-256', salt: HKDF_SALT, info: HKDF_INFO },
+    { name: 'HKDF', hash: 'SHA-256', salt: HKDF_SALT.slice(), info: HKDF_INFO.slice() },
     ikm,
     { name: 'AES-KW', length: 256 },
     false,

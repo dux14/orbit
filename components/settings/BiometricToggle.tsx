@@ -18,32 +18,37 @@ type Phase = 'checking' | 'unsupported' | 'idle' | 'enrolled' | 'working';
 export function BiometricToggle() {
   const t = useT();
   const [phase, setPhase] = React.useState<Phase>('checking');
-  const [wasEnrolled, setWasEnrolled] = React.useState(false); // working: which action is in flight
+  // true => the in-flight 'working' action is a revoke; false => an enroll.
+  const [revokeInFlight, setRevokeInFlight] = React.useState(false);
   const [error, setError] = React.useState('');
+  // WebAuthn prompts can sit open up to 60s; guard setState after unmount.
+  const mounted = React.useRef(true);
 
   React.useEffect(() => {
-    let cancelled = false;
+    mounted.current = true;
     (async () => {
       const supported = await isPlatformAuthenticatorMaybeAvailable();
-      if (cancelled) return;
+      if (!mounted.current) return;
       if (!supported) { setPhase('unsupported'); return; }
       const enrolled = await isBiometricEnrolled();
-      if (cancelled) return;
+      if (!mounted.current) return;
       setPhase(enrolled ? 'enrolled' : 'idle');
     })();
-    return () => { cancelled = true; };
+    return () => { mounted.current = false; };
   }, []);
 
   async function handleEnable() {
     setError('');
     const key = vaultStore.getState().key;
     if (!key) { setError(t('settings.bioError')); return; }
-    setWasEnrolled(false);
+    setRevokeInFlight(false);
     setPhase('working');
     try {
       await enrollBiometric(key);
+      if (!mounted.current) return;
       setPhase('enrolled');
     } catch (err) {
+      if (!mounted.current) return;
       setPhase('idle');
       setError(err instanceof PrfUnsupportedError ? t('settings.bioPrfUnsupported') : t('settings.bioError'));
     }
@@ -51,12 +56,14 @@ export function BiometricToggle() {
 
   async function handleDisable() {
     setError('');
-    setWasEnrolled(true);
+    setRevokeInFlight(true);
     setPhase('working');
     try {
       await revokeBiometric();
+      if (!mounted.current) return;
       setPhase('idle');
     } catch {
+      if (!mounted.current) return;
       setPhase('enrolled');
       setError(t('settings.bioError'));
     }
@@ -64,7 +71,7 @@ export function BiometricToggle() {
 
   if (phase === 'checking' || phase === 'unsupported') return null;
 
-  const enrolled = phase === 'enrolled' || (phase === 'working' && wasEnrolled);
+  const enrolled = phase === 'enrolled' || (phase === 'working' && revokeInFlight);
 
   return (
     <section className="rounded-2xl border border-border bg-card px-5 py-5 flex flex-col gap-5" aria-label={t('settings.bioTitle')}>

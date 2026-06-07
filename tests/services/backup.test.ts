@@ -75,4 +75,24 @@ describe('backup', () => {
     const file = await makeLegacyBackup('right', { subscriptions: [], credentials: [], paymentMethods: [] });
     await expect(importBackup(file, 'wrong')).rejects.toThrow(/master password/i);
   });
+
+  it('rejects a backup with degraded KDF params (floor defense)', async () => {
+    await vaultService.create('pw');
+    const file = await exportBackup();
+    const poisoned = { ...file, meta: { ...file.meta, kdf: { ...file.meta.kdf, memorySize: 8, iterations: 1 } } };
+    await expect(importBackup(poisoned, 'pw')).rejects.toThrow(/invalid backup/i);
+  });
+
+  it('import invalidates a stale bio credential (wrapped under the old VaultKey)', async () => {
+    await vaultService.create('pw');
+    const file = await exportBackup();
+    // Same device later: different vault + enrolled bio credential
+    await db.delete(); await db.open();
+    await vaultService.create('other-pw');
+    await repository.saveBio({ credentialId: 'abc', prfSalt: 'c2FsdA==', wrappedVaultKey: 'd3JhcA==', createdAt: '2026-06-06T00:00:00Z' });
+
+    await importBackup(file, 'pw');
+    // The restored vault has another VaultKey: the old credential must be gone.
+    expect(await repository.getBio()).toBeUndefined();
+  });
 });

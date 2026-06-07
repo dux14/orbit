@@ -56,8 +56,11 @@ export default function UnlockPage() {
       await vaultStore.getState().unlockBio();
       await settingsStore.getState().loadSettings();
       router.replace('/dashboard');
-    } catch {
+    } catch (err) {
       // Keep the password form visible as the always-available fallback.
+      // Debug-only detail: a "Verifier mismatch" here means a stale bio
+      // credential (wrapped under an old VaultKey) — diagnosable in the field.
+      console.debug('[bio-unlock]', err);
       setError(t('unlock.bioError'));
       setBioBusy(false);
     }

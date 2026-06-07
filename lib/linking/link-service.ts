@@ -3,6 +3,7 @@ import { repository } from '@/lib/db/repository';
 import { vaultStore } from '@/lib/store/vault-store';
 import { deriveKey, decrypt, checkVerifier, meetsKdfFloor } from '@/lib/crypto/vault';
 import { deriveKekFromPassword, unwrapVaultKey } from '@/lib/crypto/envelope';
+import { assertVaultData } from '@/lib/vault-data';
 import { acceptSyncBase } from '@/lib/sync/sync-controller';
 import { classifySituation, parseRemoteMeta } from './classify';
 import { LinkError, type LinkClassification } from './types';
@@ -79,10 +80,15 @@ export class LinkService {
       throw new LinkError('wrong-password');
     }
 
-    const data = JSON.parse(await decrypt(key, remote.encryptedBlob)) as VaultData;
+    const data: VaultData = JSON.parse(await decrypt(key, remote.encryptedBlob));
+    assertVaultData(data);
 
     // Persistir meta + blob remotos en Dexie y fijar el estado de sync a la versión remota.
     await repository.createVault(meta, remote.encryptedBlob);
+    // El vault vinculado tiene OTRA VaultKey: una credencial bio previa de este
+    // dispositivo quedaría envuelta bajo la clave vieja → botón Face ID roto
+    // permanente. Invalidarla; el usuario re-enrola (code review S9, I1).
+    await repository.deleteBio();
     await repository.saveSyncState({ version: remote.version, updatedAt: remote.updatedAt });
 
     // Cargar en memoria: vault desbloqueado con la clave derivada.
