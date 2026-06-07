@@ -2,7 +2,7 @@
 
 **Fecha de medición:** 2026-06-06
 **Medido por:** S2 (Supabase setup)
-**Re-chequeo programado:** S12 (CP7)
+**Re-chequeo programado:** S12 (CP7) — ✅ hecho, ver §6
 
 ## 1. Vercel (plan Hobby)
 
@@ -50,3 +50,49 @@
 ## 5. Conclusión
 
 La proyección **cabe en el free tier con amplio margen**. Almacenamiento: con 1.000 usuarios la DB usaría ≈ 26 MB (10 MB base + ~16 MB de blobs), es decir ~5% del límite de 500 MB de Supabase Free; incluso con 10.000 usuarios serían ≈ 170 MB (~34%), aún por debajo del límite. El cuello de botella no es el almacenamiento sino Realtime y requests: a ~10–50 msgs/usuario/día, el límite de 2.000.000 msgs/mes soporta del orden de 1.300–6.600 usuarios activos diarios antes de tocar el umbral amarillo, por lo que el debounce agresivo de sync (CP3) es la mitigación crítica. Conclusión: el modelo single-blob satisface el criterio de éxito global #6 (cabe en free tier con margen documentado); el seguimiento se centra en Realtime/requests, no en DB.
+
+## 6. Post-sync (S12, re-chequeo CP7)
+
+**Fecha:** 2026-06-06 (mismo día — Phase 2 completa se construyó en una jornada;
+el consumo "real" refleja desarrollo + suites E2E, no tráfico de usuarios).
+
+### Supabase (Management API, medido)
+
+| Métrica | Límite Free | Medido S12 | vs umbral amarillo |
+|---|---|---|---|
+| DB size | 500 MB | **11 MB** (+1 MB vs baseline: tablas S10/S11 + residuos E2E) | 2,2% — sin riesgo |
+| MAU | 50.000 | 5 (todos usuarios throwaway E2E; se limpian en el cierre S12) | ~0% |
+| Filas `vaults` | — | 2 (residuos E2E) | blob/usuario confirmado pequeño |
+| `rate_limits` residuales | — | 3 filas (ventanas viejas; cleanup oportunista al próximo push del mismo usuario) | sin acción |
+
+### Crons (deben seguir activos — evitan la pausa de 7 días)
+
+| Job | Schedule | Activo |
+|---|---|---|
+| `keep-alive-daily` | `17 4 * * *` | ✅ |
+| `send-reminders-daily` | `0 13 * * *` | ✅ |
+| `prune-sent-reminders` | `0 3 * * 0` | ✅ |
+
+### Vercel
+
+CLI/MCP siguen sin exponer bandwidth/invocaciones/build minutes (limitación
+documentada en §1). Observable: 6 deployments totales, builds de 33–44s
+(≈ 4 min de build acumulados — trivial). `send-reminders` corre en Supabase
+Edge (no consume invocaciones Vercel). Bandwidth real: revisar dashboard Usage
+tras el rollout; con 0 usuarios reales es ≈ 0.
+
+### Realtime (proyección, sin cambio de modelo)
+
+El sync NO usa canales Realtime: pull por reconcile en unlock/focus/online +
+push debounced (4 s) vía `upsert_vault`. Consumo Realtime = 0 msgs. El riesgo
+proyectado en §3 se desplaza íntegramente a **requests REST/RPC**, acotados por
+el rate limit de S11 (30 escrituras/min/usuario) y el debounce: techo práctico
+~10–50 requests/usuario activo/día — muy por debajo de cualquier límite Free.
+
+### Veredicto §5.6
+
+**Dentro del free tier con margen amplio.** DB 2,2% del límite con todo el
+overhead de desarrollo incluido; MAU y Realtime ≈ 0; el único punto ciego es
+bandwidth de Vercel (solo dashboard), trivial pre-rollout. Mitigantes ya
+desplegados: debounce 4 s (S6), rate limit DB (S11), crons de keep-alive y
+poda (S10). Sin acción requerida.
