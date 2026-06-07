@@ -19,6 +19,7 @@ describe('auth-store', () => {
   beforeEach(() => {
     useAuthStore.setState({ user: null, session: null, initialized: false });
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('init subscribes and returns an unsubscribe fn', () => {
@@ -32,6 +33,30 @@ describe('auth-store', () => {
     await useAuthStore.getState().signInWithGoogle();
     expect(signInWithOAuth).toHaveBeenCalledWith(
       expect.objectContaining({ provider: 'google' }),
+    );
+  });
+
+  it('signInWithGoogle redirects to /settings when sync is disabled', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SYNC_ENABLED', 'false');
+    await useAuthStore.getState().signInWithGoogle();
+    expect(signInWithOAuth).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('next=/settings'),
+        }),
+      }),
+    );
+  });
+
+  it('signInWithGoogle redirects through /link when sync is enabled', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SYNC_ENABLED', 'true');
+    await useAuthStore.getState().signInWithGoogle();
+    expect(signInWithOAuth).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('next=/link'),
+        }),
+      }),
     );
   });
 

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { resetSyncService } from '@/lib/sync/sync-trigger';
+import { isSyncEnabled } from '@/lib/sync/sync-controller';
 
 interface AuthState {
   user: User | null;
@@ -38,9 +39,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signInWithGoogle: async () => {
     const supabase = createClient();
+    // Con sync activo el aterrizaje pasa por /link, que reenvía a /dashboard si no hay nada que vincular.
+    const next = isSyncEnabled() ? '/link' : '/settings';
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/settings` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${next}` },
     });
   },
 
