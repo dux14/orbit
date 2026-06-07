@@ -308,6 +308,23 @@ const en = {
   'link.choiceKeepRemote':      'Keep the account’s vault',
   'link.choiceWarning':         'This cannot be undone.',
   'link.choiceCancel':          'Cancel',
+
+  // ── Biometric unlock ────────────────────────────────────────────────────────
+  'settings.bioTitle':            'Biometric unlock',
+  'settings.bioDesc':             'Unlock with Face ID or your fingerprint on this device. Your master password still works as a fallback.',
+  'settings.bioEnable':           'Enable biometric unlock',
+  'settings.bioEnabling':         'Setting up…',
+  'settings.bioEnabled':          'Biometric unlock is on for this device',
+  'settings.bioDisable':          'Remove biometric unlock',
+  'settings.bioDisabling':        'Removing…',
+  'settings.bioUnsupported':      'This device or browser does not support biometric unlock.',
+  'settings.bioPrfUnsupported':   'Your device set up a passkey but did not provide the secure key material (PRF) Orbit needs. Biometric unlock is unavailable here.',
+  'settings.bioError':            'Could not set up biometric unlock. Please try again.',
+  'settings.bioRevoked':          'Biometric unlock removed from this device.',
+  'unlock.bioButton':             'Unlock with Face ID / fingerprint',
+  'unlock.bioWorking':            'Waiting for biometrics…',
+  'unlock.bioError':              'Biometric unlock failed. Use your master password.',
+  'unlock.orPassword':            'or enter your master password',
 } as const;
 
 const es = {
@@ -612,6 +629,23 @@ const es = {
   'link.choiceKeepRemote':      'Conservar el vault de la cuenta',
   'link.choiceWarning':         'Esto no se puede deshacer.',
   'link.choiceCancel':          'Cancelar',
+
+  // ── Desbloqueo biométrico ────────────────────────────────────────────────────
+  'settings.bioTitle':            'Desbloqueo biométrico',
+  'settings.bioDesc':             'Desbloquea con Face ID o tu huella en este dispositivo. Tu contraseña maestra sigue funcionando como alternativa.',
+  'settings.bioEnable':           'Activar desbloqueo biométrico',
+  'settings.bioEnabling':         'Configurando…',
+  'settings.bioEnabled':          'El desbloqueo biométrico está activo en este dispositivo',
+  'settings.bioDisable':          'Quitar desbloqueo biométrico',
+  'settings.bioDisabling':        'Quitando…',
+  'settings.bioUnsupported':      'Este dispositivo o navegador no admite el desbloqueo biométrico.',
+  'settings.bioPrfUnsupported':   'Tu dispositivo creó una clave de acceso pero no entregó el material criptográfico (PRF) que Orbit necesita. El desbloqueo biométrico no está disponible aquí.',
+  'settings.bioError':            'No se pudo configurar el desbloqueo biométrico. Inténtalo de nuevo.',
+  'settings.bioRevoked':          'Desbloqueo biométrico eliminado de este dispositivo.',
+  'unlock.bioButton':             'Desbloquear con Face ID / huella',
+  'unlock.bioWorking':            'Esperando biometría…',
+  'unlock.bioError':              'El desbloqueo biométrico falló. Usa tu contraseña maestra.',
+  'unlock.orPassword':            'o ingresa tu contraseña maestra',
 } as const;
 
 export type DictKey = keyof typeof en;
