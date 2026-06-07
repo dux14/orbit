@@ -55,15 +55,23 @@ self.addEventListener("push", (event: PushEvent) => {
 
 self.addEventListener("notificationclick", (event: NotificationEvent) => {
   event.notification.close();
-  const url = (event.notification.data as { url?: string })?.url ?? "/subscriptions";
+  // Defense-in-depth: only navigate to same-origin relative paths, whatever
+  // the payload carries. "//host" would be protocol-relative — reject it too.
+  const raw = (event.notification.data as { url?: string })?.url ?? "/subscriptions";
+  const url = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/subscriptions";
   event.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clients) => {
+      .then(async (clients) => {
         for (const client of clients) {
           if ("focus" in client) {
-            (client as WindowClient).navigate(url);
-            return (client as WindowClient).focus();
+            const win = client as WindowClient;
+            try {
+              if (new URL(win.url).pathname !== url) await win.navigate(url);
+            } catch {
+              // navigate() can reject for detached clients; still try to focus.
+            }
+            return win.focus();
           }
         }
         return self.clients.openWindow(url);

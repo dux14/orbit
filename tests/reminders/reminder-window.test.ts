@@ -50,4 +50,8 @@ describe('buildReminderIndex', () => {
       expect(Object.keys(e).sort()).toEqual(['lead_days', 'next_renewal', 'service_label']);
     }
   });
+  it('excludes active subs without a renewal date', () => {
+    const noDate = { id: '3', serviceName: 'Dropbox', status: 'active', nextRenewalDate: '' } as Subscription;
+    expect(buildReminderIndex([noDate], 3)).toEqual([]);
+  });
 });

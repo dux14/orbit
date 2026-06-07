@@ -54,16 +54,22 @@ export function CloudRemindersSection() {
       const res = await enablePush();
       if (!mounted.current) return;
       if (!res.ok) {
-        setMsg(res.reason === 'permission-denied' ? t('reminders.permission.denied') : t('settings.bioError'));
+        setMsg(res.reason === 'permission-denied' ? t('reminders.permission.denied') : t('reminders.error'));
         return;
       }
-      await syncReminderIndex(subscriptions, leadDays);
+      try {
+        await syncReminderIndex(subscriptions, leadDays);
+      } catch (err) {
+        // Roll back: don't leave a registered device while the toggle reads OFF.
+        await disablePush();
+        throw err;
+      }
       if (!mounted.current) return;
       await settingsStore.getState().updateSettings({ cloudReminders: true });
       if (!mounted.current) return;
       setMsg(t('reminders.enabled'));
     } catch {
-      if (mounted.current) setMsg(t('settings.bioError'));
+      if (mounted.current) setMsg(t('reminders.error'));
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -80,7 +86,7 @@ export function CloudRemindersSection() {
       if (!mounted.current) return;
       setMsg(t('reminders.disabled'));
     } catch {
-      if (mounted.current) setMsg(t('settings.bioError'));
+      if (mounted.current) setMsg(t('reminders.error'));
     } finally {
       if (mounted.current) setBusy(false);
     }

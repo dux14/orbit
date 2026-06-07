@@ -65,7 +65,11 @@ export async function enablePush(): Promise<{ ok: true } | { ok: false; reason: 
     },
     { onConflict: 'endpoint' },
   );
-  if (error) return { ok: false, reason: error.message };
+  if (error) {
+    // Keep the rollback invariant: no server row -> no local subscription.
+    await sub.unsubscribe();
+    return { ok: false, reason: error.message };
+  }
   return { ok: true };
 }
 

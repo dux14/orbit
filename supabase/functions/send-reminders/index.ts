@@ -42,10 +42,29 @@ function bodyFor(label: string, daysLeft: number): string {
   return `${label} renews in ${daysLeft} days.`;
 }
 
+// Constant-time bearer comparison: this string check is the entire authorization
+// surface of an RLS-bypassing endpoint, so don't leak prefix length via timing.
+async function timingSafeEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [ha, hb] = await Promise.all([
+    crypto.subtle.digest("SHA-256", enc.encode(a)),
+    crypto.subtle.digest("SHA-256", enc.encode(b)),
+  ]);
+  const x = new Uint8Array(ha);
+  const y = new Uint8Array(hb);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+// Server-side date bound for the reminders query. Lead windows beyond this many
+// days enter the send window late; default lead is 3, so 60 is a generous cap.
+const MAX_LEAD_DAYS = 60;
+
 Deno.serve(async (req) => {
   // Only allow the scheduled invocation (pg_cron passes the service role key).
   const auth = req.headers.get("authorization") ?? "";
-  if (auth !== `Bearer ${SERVICE_ROLE}`) {
+  if (!(await timingSafeEqual(auth, `Bearer ${SERVICE_ROLE}`))) {
     return new Response("forbidden", { status: 403 });
   }
 
@@ -56,16 +75,22 @@ Deno.serve(async (req) => {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
 
-  // Pull all reminders; filter due ones in code (small table; index is per-user minimal).
+  // Date-bounded query (uses the reminders_next_renewal_idx range index):
+  // past renewals are never due, and nothing beyond MAX_LEAD_DAYS can be due.
+  // The exact per-row [0, lead_days] window is then applied in code.
+  const horizon = new Date(now.getTime() + MAX_LEAD_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
   const { data: reminders, error: rErr } = await supabase
     .from("reminders")
-    .select("id, user_id, service_label, next_renewal, lead_days");
+    .select("id, user_id, service_label, next_renewal, lead_days")
+    .gte("next_renewal", today)
+    .lte("next_renewal", horizon);
   if (rErr) return new Response(`reminders error: ${rErr.message}`, { status: 500 });
 
-  const due = (reminders as ReminderRow[]).filter((r) => {
-    const left = daysUntil(r.next_renewal, now);
-    return left >= 0 && left <= r.lead_days;
-  });
+  const due = (reminders as ReminderRow[])
+    .map((r) => ({ ...r, daysLeft: daysUntil(r.next_renewal, now) }))
+    .filter((r) => r.daysLeft >= 0 && r.daysLeft <= r.lead_days);
 
   let sent = 0;
   let pruned = 0;
@@ -87,10 +112,9 @@ Deno.serve(async (req) => {
       .eq("user_id", r.user_id);
     if (!subs || subs.length === 0) continue;
 
-    const daysLeft = daysUntil(r.next_renewal, now);
     const payload = JSON.stringify({
       title: "Upcoming renewal",
-      body: bodyFor(r.service_label, daysLeft),
+      body: bodyFor(r.service_label, r.daysLeft),
       url: "/subscriptions",
     });
 
@@ -107,8 +131,11 @@ Deno.serve(async (req) => {
         // 404/410 => subscription expired; prune it.
         const status = (err as { statusCode?: number }).statusCode;
         if (status === 404 || status === 410) {
-          await supabase.from("push_subscriptions").delete().eq("id", s.id);
-          pruned++;
+          const { error: delErr } = await supabase
+            .from("push_subscriptions")
+            .delete()
+            .eq("id", s.id);
+          if (!delErr) pruned++;
         }
       }
     }
