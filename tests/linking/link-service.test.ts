@@ -12,13 +12,30 @@ import type { VaultData, VaultMeta } from '@/lib/types';
 
 const PW = 'TestPassword1!';
 
-/** Construye un RemoteVault cifrado con una password y datos dados. */
+/** Construye un RemoteVault v0 legado cifrado con una password y datos dados. */
 async function makeRemote(pw: string, data: VaultData): Promise<RemoteVault> {
   const kdf = { ...defaultKdf(), salt: generateSalt() };
   const key = await deriveKey(pw, kdf);
   const verifier = await createVerifier(key);
   const meta: VaultMeta = { schemaVersion: 1, kdf, verifier };
   const blob = await encrypt(key, JSON.stringify(data));
+  return { encryptedMeta: JSON.stringify(meta), encryptedBlob: blob, version: 2, updatedAt: '2026-06-06T10:00:00.000Z' };
+}
+
+/** Construye un RemoteVault envelope v1 (verifier y blob bajo VaultKey envuelta). */
+async function makeRemoteV1(pw: string, data: VaultData): Promise<RemoteVault> {
+  const { generateVaultKey, deriveKekFromPassword, wrapVaultKey } = await import('@/lib/crypto/envelope');
+  const kdf = { ...defaultKdf(), salt: generateSalt() };
+  const kek = await deriveKekFromPassword(pw, kdf);
+  const vaultKey = await generateVaultKey();
+  const meta: VaultMeta = {
+    schemaVersion: 1,
+    kdf,
+    verifier: await createVerifier(vaultKey),
+    envelopeVersion: 1,
+    wrappedKeys: { master: await wrapVaultKey(vaultKey, kek) },
+  };
+  const blob = await encrypt(vaultKey, JSON.stringify(data));
   return { encryptedMeta: JSON.stringify(meta), encryptedBlob: blob, version: 2, updatedAt: '2026-06-06T10:00:00.000Z' };
 }
 
@@ -74,6 +91,25 @@ describe('LinkService', () => {
     await expect(svc.linkNewDevice(PW)).rejects.toMatchObject({ code: 'unknown' });
     // Nada persistido: el vault local no debe existir tras el rechazo.
     expect(await repository.vaultExists()).toBe(false);
+  });
+
+  it('linkNewDevice links an envelope v1 remote vault (unwrap VaultKey, not KDF key)', async () => {
+    const data: VaultData = { subscriptions: [{ id: 's1', serviceName: 'Netflix', category: 'streaming', amount: 9.99, currency: 'USD', billingCycle: 'monthly', nextRenewalDate: '2026-12-31', status: 'active', createdAt: '', updatedAt: '' }], credentials: [], paymentMethods: [] };
+    const remote = await makeRemoteV1(PW, data);
+    const svc = new LinkService(makeRepo(remote) as never);
+
+    await svc.linkNewDevice(PW);
+
+    expect(vaultStore.getState().data?.subscriptions[0].serviceName).toBe('Netflix');
+    expect(vaultStore.getState().locked).toBe(false);
+    // La meta v1 se persiste tal cual (envelopeVersion intacto)
+    expect((await repository.getMeta())?.envelopeVersion).toBe(1);
+  });
+
+  it('linkNewDevice rejects wrong password on an envelope v1 remote (AES-KW rejection)', async () => {
+    const remote = await makeRemoteV1(PW, { subscriptions: [], credentials: [], paymentMethods: [] });
+    const svc = new LinkService(makeRepo(remote) as never);
+    await expect(svc.linkNewDevice('WrongPassword9!')).rejects.toMatchObject({ code: 'wrong-password' });
   });
 
   it('linkNewDevice throws wrong-password LinkError on bad password', async () => {

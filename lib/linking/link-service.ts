@@ -2,6 +2,7 @@
 import { repository } from '@/lib/db/repository';
 import { vaultStore } from '@/lib/store/vault-store';
 import { deriveKey, decrypt, checkVerifier, meetsKdfFloor } from '@/lib/crypto/vault';
+import { deriveKekFromPassword, unwrapVaultKey } from '@/lib/crypto/envelope';
 import { acceptSyncBase } from '@/lib/sync/sync-controller';
 import { classifySituation, parseRemoteMeta } from './classify';
 import { LinkError, type LinkClassification } from './types';
@@ -59,7 +60,21 @@ export class LinkService {
     if (!meetsKdfFloor(meta.kdf)) {
       throw new LinkError('unknown', 'Remote vault KDF params below the accepted floor');
     }
-    const key = await deriveKey(password, meta.kdf);
+    // Envelope v1: la VaultKey viaja envuelta en wrappedKeys.master; el verifier
+    // está cifrado bajo la VaultKey, no bajo la clave derivada del password.
+    // v0 legado: la clave KDF verifica y descifra el blob directamente.
+    let key: CryptoKey;
+    if (meta.envelopeVersion && meta.wrappedKeys) {
+      const kek = await deriveKekFromPassword(password, meta.kdf);
+      try {
+        key = await unwrapVaultKey(meta.wrappedKeys.master, kek);
+      } catch {
+        // Rechazo de integridad AES-KW = password incorrecto
+        throw new LinkError('wrong-password');
+      }
+    } else {
+      key = await deriveKey(password, meta.kdf);
+    }
     if (!(await checkVerifier(key, meta.verifier))) {
       throw new LinkError('wrong-password');
     }
