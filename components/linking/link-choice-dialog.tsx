@@ -1,0 +1,34 @@
+// components/linking/link-choice-dialog.tsx
+'use client';
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/use-t';
+
+interface Props {
+  open: boolean;
+  onKeepLocal: () => void;
+  onKeepRemote: () => void;
+  onCancel: () => void;
+}
+
+export function LinkChoiceDialog({ open, onKeepLocal, onKeepRemote, onCancel }: Props) {
+  const t = useT();
+  if (!open) return null;
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onCancel(); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>{t('link.choiceTitle')}</DialogTitle>
+          <DialogDescription>{t('link.choiceBody')}</DialogDescription>
+        </DialogHeader>
+        <p className="text-sm font-medium text-destructive">{t('link.choiceWarning')}</p>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onCancel}>{t('link.choiceCancel')}</Button>
+          <Button variant="outline" onClick={onKeepRemote}>{t('link.choiceKeepRemote')}</Button>
+          <Button variant="destructive" onClick={onKeepLocal}>{t('link.choiceKeepLocal')}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
