@@ -2,32 +2,7 @@
 
 import type { FxRatesCache, Subscription } from "@/lib/types";
 import { monthlyInPrimary } from "@/lib/domain/totals";
-
-// ─── Pastel category color palette ────────────────────────────────────────────
-const PASTEL_PALETTE = [
-  "#f4a0b0", // coral-rose
-  "#a0d4f4", // sky blue
-  "#b8f0c8", // mint
-  "#ffd6a0", // peach
-  "#d4b8f0", // lilac
-  "#f4c0a0", // warm peach
-  "#a0e8d8", // teal
-  "#f0b8d4", // rose
-  "#c8d4ff", // periwinkle
-  "#b8e8b0", // sage
-  "#ffe0a0", // golden
-  "#d0b8e8", // lavender
-];
-
-/** Deterministic hash: category string → pastel color */
-function categoryColor(category: string): string {
-  let h = 5381;
-  for (let i = 0; i < category.length; i++) {
-    h = ((h << 5) + h) ^ category.charCodeAt(i);
-    h = h >>> 0; // unsigned 32-bit
-  }
-  return PASTEL_PALETTE[h % PASTEL_PALETTE.length];
-}
+import { categoryColor } from "@/lib/constants/category-colors";
 
 // ─── Ring layout ───────────────────────────────────────────────────────────────
 /** Ring radii as viewBox units (viewBox = "0 0 280 280", centre = 140,140) */

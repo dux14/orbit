@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircleIcon, PlusIcon, TrendingUpIcon, CalendarIcon } from "lucide-react";
 import { notifyDueRenewals } from "@/lib/services/reminders";
 import { ReminderPermission } from "@/components/reminders/ReminderPermission";
+import { categoryColor } from "@/lib/constants/category-colors";
 import { useT } from "@/lib/i18n/use-t";
 
 // ─── Currency formatting ────────────────────────────────────────────────────────
@@ -28,32 +29,6 @@ function fmtCurrency(amount: number, currency: string, locale: string): string {
     return `${currency} ${amount.toFixed(2)}`;
   }
 }
-
-// ─── Color maps (shared between breakdown chart and orbit legend) ──────────────
-const CATEGORY_COLORS: Record<string, string> = {
-  Streaming: "#f4a0b0",
-  "News/Media": "#ffd6a0",
-  Productivity: "#b8f0c8",
-  Tools: "#d4b8f0",
-  Cloud: "#a0d4f4",
-  Finance: "#f4c0a0",
-  Health: "#a0e8d8",
-  Social: "#f0b8d4",
-  Gaming: "#c8d4ff",
-  Other: "#e0d4f0",
-};
-
-const CHART_FALLBACK_COLORS = [
-  "#d4b8f0",
-  "#a0d4f4",
-  "#b8f0c8",
-  "#ffd6a0",
-  "#f4a0b0",
-  "#a0e8d8",
-  "#f4c0a0",
-  "#c8d4ff",
-  "#f0b8d4",
-];
 
 // ─── FX error banner ───────────────────────────────────────────────────────────
 function FxErrorBanner({ message }: { message: string }) {
@@ -131,13 +106,13 @@ function BarRow({
   return (
     <div className="flex items-center gap-3 group">
       <span
-        className="w-28 flex-shrink-0 text-xs text-muted-foreground truncate text-right"
+        className="w-24 flex-shrink-0 text-xs text-muted-foreground truncate text-right"
         title={label}
       >
         {label}
       </span>
       <div
-        className="flex-1 h-5 rounded-full bg-muted overflow-hidden"
+        className="flex-1 min-w-0 h-5 rounded-full bg-muted overflow-hidden"
         role="progressbar"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
@@ -152,7 +127,7 @@ function BarRow({
           }}
         />
       </div>
-      <span className="w-20 flex-shrink-0 text-xs font-medium tabular-nums text-right text-foreground/80">
+      <span className="flex-shrink-0 whitespace-nowrap text-xs font-medium tabular-nums text-right text-foreground/80">
         {fmtCurrency(amount, currency, locale)}
       </span>
     </div>
@@ -160,10 +135,6 @@ function BarRow({
 }
 
 // ─── Breakdown card ────────────────────────────────────────────────────────────
-function breakdownColor(label: string, index: number): string {
-  return CATEGORY_COLORS[label] ?? CHART_FALLBACK_COLORS[index % CHART_FALLBACK_COLORS.length];
-}
-
 function BreakdownCard({
   title,
   data,
@@ -189,7 +160,7 @@ function BreakdownCard({
         <p className="text-sm text-muted-foreground">{emptyLabel ?? t('dashboard.noData')}</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {data.map((row, i) => (
+          {data.map((row) => (
             <BarRow
               key={row.label}
               label={row.label}
@@ -197,7 +168,7 @@ function BreakdownCard({
               maxAmount={maxAmount}
               currency={currency}
               locale={locale}
-              color={breakdownColor(row.label, i)}
+              color={categoryColor(row.label)}
             />
           ))}
         </div>
@@ -457,11 +428,7 @@ export default function DashboardPage() {
                 <div key={row.label} className="flex items-center gap-1.5">
                   <span
                     className="size-2.5 rounded-full flex-shrink-0"
-                    style={{
-                      background:
-                        CATEGORY_COLORS[row.label] ??
-                        CHART_FALLBACK_COLORS[categoryRows.indexOf(row) % CHART_FALLBACK_COLORS.length],
-                    }}
+                    style={{ background: categoryColor(row.label) }}
                     aria-hidden="true"
                   />
                   <span className="text-xs text-muted-foreground">{row.label}</span>

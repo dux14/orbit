@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OrbitLogo } from "@/components/orbit/OrbitLogo";
+import { categoryColor } from "@/lib/constants/category-colors";
 import { cn } from "@/lib/utils";
 import {
   PlusIcon,
@@ -24,24 +25,6 @@ export interface SubscriptionListProps {
   onAdd: () => void;
   onEdit: (sub: Subscription) => void;
   onView: (sub: Subscription) => void;
-}
-
-/** ─── Category color map (matches OrbitLogo pastel palette) ─────────── */
-const CATEGORY_COLORS: Record<string, string> = {
-  Streaming: "#f4a0b0",
-  "News/Media": "#ffd6a0",
-  Productivity: "#b8f0c8",
-  Tools: "#d4b8f0",
-  Cloud: "#a0d4f4",
-  Finance: "#f4c0a0",
-  Health: "#a0e8d8",
-  Social: "#f0b8d4",
-  Gaming: "#c8d4ff",
-  Other: "#e0e0e0",
-};
-
-function categoryColor(cat: string): string {
-  return CATEGORY_COLORS[cat] ?? "#e0e0e0";
 }
 
 /** ─── Renewal badge ─────────────────────────────────────────────────── */

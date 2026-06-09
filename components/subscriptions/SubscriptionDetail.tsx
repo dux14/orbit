@@ -16,6 +16,7 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { categoryColor } from "@/lib/constants/category-colors";
 import { useT } from "@/lib/i18n/use-t";
 
 /** ─── Types ──────────────────────────────────────────────────────────── */
@@ -154,7 +155,7 @@ export function SubscriptionDetail({
           className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-semibold text-gray-700 dark:text-gray-200 flex-shrink-0"
           style={{
             background: sub.category
-              ? getCategoryColor(sub.category) + "55"
+              ? categoryColor(sub.category) + "55"
               : "oklch(0.90 0.045 268 / 0.3)",
           }}
           aria-hidden="true"
@@ -336,21 +337,4 @@ export function SubscriptionDetail({
       </div>
     </div>
   );
-}
-
-/** Local helper (copied from SubscriptionList to keep component standalone) */
-const CATEGORY_COLORS: Record<string, string> = {
-  Streaming: "#f4a0b0",
-  "News/Media": "#ffd6a0",
-  Productivity: "#b8f0c8",
-  Tools: "#d4b8f0",
-  Cloud: "#a0d4f4",
-  Finance: "#f4c0a0",
-  Health: "#a0e8d8",
-  Social: "#f0b8d4",
-  Gaming: "#c8d4ff",
-  Other: "#e0e0e0",
-};
-function getCategoryColor(cat: string): string {
-  return CATEGORY_COLORS[cat] ?? "#e0e0e0";
 }

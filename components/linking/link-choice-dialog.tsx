@@ -23,10 +23,10 @@ export function LinkChoiceDialog({ open, onKeepLocal, onKeepRemote, onCancel }: 
           <DialogDescription>{t('link.choiceBody')}</DialogDescription>
         </DialogHeader>
         <p className="text-sm font-medium text-destructive">{t('link.choiceWarning')}</p>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onCancel}>{t('link.choiceCancel')}</Button>
-          <Button variant="outline" onClick={onKeepRemote}>{t('link.choiceKeepRemote')}</Button>
-          <Button variant="destructive" onClick={onKeepLocal}>{t('link.choiceKeepLocal')}</Button>
+        <DialogFooter className="flex-col sm:flex-col">
+          <Button variant="outline" className="h-9 w-full" onClick={onKeepRemote}>{t('link.choiceKeepRemote')}</Button>
+          <Button variant="destructive" className="h-9 w-full" onClick={onKeepLocal}>{t('link.choiceKeepLocal')}</Button>
+          <Button variant="ghost" className="h-9 w-full" onClick={onCancel}>{t('link.choiceCancel')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
